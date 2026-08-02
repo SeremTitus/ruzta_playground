@@ -1,0 +1,51 @@
+[configuration]
+
+entry_symbol = "ruzta_library_init"
+compatibility_minimum = "4.5"
+reloadable = true
+
+[icons]
+
+Ruzta = "ruzta.svg"
+
+[libraries]
+
+macos.editor = "lib/ruzta.macos.editor.framework"
+macos.debug = "lib/ruzta.macos.debug.framework"
+macos.release = "lib/ruzta.macos.release.framework"
+windows.editor.x86_32 = "lib/ruzta.windows.editor.x86_32.dll"
+windows.debug.x86_32 = "lib/ruzta.windows.debug.x86_32.dll"
+windows.release.x86_32 = "lib/ruzta.windows.release.x86_32.dll"
+windows.editor.x86_64 = "lib/ruzta.windows.editor.x86_64.dll"
+windows.debug.x86_64 = "lib/ruzta.windows.debug.x86_64.dll"
+windows.release.x86_64 = "lib/ruzta.windows.release.x86_64.dll"
+windows.editor.arm64 = "lib/ruzta.windows.editor.arm64.dll"
+windows.debug.arm64 = "lib/ruzta.windows.debug.arm64.dll"
+windows.release.arm64 = "lib/ruzta.windows.release.arm64.dll"
+linux.editor.x86_32 = "lib/ruzta.linux.editor.x86_32.so"
+linux.debug.x86_32 = "lib/ruzta.linux.debug.x86_32.so"
+linux.release.x86_32 = "lib/ruzta.linux.release.x86_32.so"
+linux.editor.x86_64 = "lib/ruzta.linux.editor.x86_64.so"
+linux.debug.x86_64 = "lib/ruzta.linux.debug.x86_64.so"
+linux.release.x86_64 = "lib/ruzta.linux.release.x86_64.so"
+linux.editor.arm32 = "lib/ruzta.linux.editor.arm32.so"
+linux.debug.arm32 = "lib/ruzta.linux.debug.arm32.so"
+linux.release.arm32 = "lib/ruzta.linux.release.arm32.so"
+linux.editor.arm64 = "lib/ruzta.linux.editor.arm64.so"
+linux.debug.arm64 = "lib/ruzta.linux.debug.arm64.so"
+linux.release.arm64 = "lib/ruzta.linux.release.arm64.so"
+linux.editor.rv64 = "lib/ruzta.linux.editor.rv64.so"
+linux.debug.rv64 = "lib/ruzta.linux.debug.rv64.so"
+linux.release.rv64 = "lib/ruzta.linux.release.rv64.so"
+android.debug.x86_64 = "lib/ruzta.android.debug.x86_64.so"
+android.release.x86_64 = "lib/ruzta.android.release.x86_64.so"
+android.debug.arm64 = "lib/ruzta.android.debug.arm64.so"
+android.release.arm64 = "lib/ruzta.android.release.arm64.so"
+ios.debug = "lib/ruzta.ios.debug.xcframework"
+ios.release = "lib/ruzta.ios.release.xcframework"
+web.editor.threads.wasm32 = "lib/ruzta.web.editor.wasm32.wasm"
+web.debug.threads.wasm32 = "lib/ruzta.web.debug.wasm32.wasm"
+web.release.threads.wasm32 = "lib/ruzta.web.release.wasm32.wasm"
+web.editor.wasm32 = "lib/ruzta.web.editor.wasm32.nothreads.wasm"
+web.debug.wasm32 = "lib/ruzta.web.debug.wasm32.nothreads.wasm"
+web.release.wasm32 = "lib/ruzta.web.release.wasm32.nothreads.wasm"

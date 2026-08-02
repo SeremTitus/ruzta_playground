@@ -1,0 +1,30 @@
+@tool
+@abstract class_name RuztaMCPTool extends RefCounted
+
+## Abstract base class for Ruzta MCP tools.
+## Extend this class and implement all abstract methods to register a custom tool.
+## Tools are discovered automatically on MCP server anywhere in res://
+
+enum ToolInputType { STRING, NUMBER, BOOLEAN }
+enum ToolResultType { TEXT, IMAGE, AUDIO, RESOURCE_LINK, RESOURCE }
+
+tuple ToolInput(name: String, type: ToolInputType, description: String, required: bool)
+tuple ToolResult(type: ToolResultType, text: String = "", uri: String = "", data: String = "", mime_type: String = "", name: String = "", description: String = "", is_error: bool = false)
+
+@abstract func get_name() -> String
+
+@abstract func get_description() -> String
+
+@abstract func get_input() -> Array[ToolInput]
+
+## If false, the tool is excluded from the MCP server while running in the editor.
+func for_editor() -> bool:
+	return true
+
+## ToolResultType are:
+## - text - with text field
+## - image - with data and mimeType fields
+## - audio - with data and mimeType fields
+## - resource_link - with uri, name, description, and mimeType fields
+## - resource - with uri, mimeType, and text fields
+@abstract func execute(arguments: Dictionary[String, Variant]) -> ToolResult

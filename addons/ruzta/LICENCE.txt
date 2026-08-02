@@ -1,0 +1,13 @@
+Copyright (c) 2026 Serem Titus.
+
+This licence applies only to original Ruzta code and assets owned by Serem
+Titus. Third-party and upstream components, including materials covered by
+GDSCRIPT_LICENCE.txt, remain under their own terms.
+
+Permission is granted to use and distribute compiled or packaged binaries 
+of Ruzta, including in free and commercial games and applications, 
+provided this copyright notice and this licence text are kept.
+
+RUZTA IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. IN
+NO EVENT SHALL THE AUTHOR OR COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM,
+DAMAGES, OR OTHER LIABILITY.

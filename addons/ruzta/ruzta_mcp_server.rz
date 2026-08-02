@@ -1,0 +1,381 @@
+@tool
+class_name RuztaMCPServer
+extends Node
+
+var host := "127.0.0.1"
+var port := 7778
+var running := false
+
+var server: TCPServer
+var peers: Array[StreamPeerTCP] = []
+
+var tools: Dictionary = {}
+
+var include_validate := false
+var mcp_name := ""
+
+func _init(set_include_validate := false, set_name := "ruzta-mcp") -> void:
+	include_validate = set_include_validate
+	mcp_name = set_name.to_kebab_case()
+
+func _exit_tree() -> void:
+	stop_server()
+
+func start_server() -> void:
+	_scan_tools()
+
+	server = TCPServer.new()
+	var err = server.listen(port, host)
+	if err != OK:
+		push_error("Ruzta MCP: Failed to start server on " + host + ":" + str(port) + "/mcp")
+		return
+
+	running = true
+	set_process_internal(true)
+	print("Ruzta MCP server started on " + host + ":" + str(port) + "/mcp")
+	print("Registered tools: " + str(tools.keys()))
+
+func stop_server() -> void:
+	if not running:
+		return
+
+	running = false
+	set_process_internal(false)
+
+	for peer in peers:
+		if peer.get_status() == StreamPeerTCP.STATUS_CONNECTED:
+			peer.disconnect_from_host()
+	peers.clear()
+
+	if server:
+		server.stop()
+		server = null
+
+	print("Ruzta MCP server stopped")
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_INTERNAL_PROCESS and running:
+		_poll()
+
+func _poll() -> void:
+	if server and server.is_connection_available():
+		var peer: StreamPeerTCP = server.take_connection()
+		if peer:
+			peers.append(peer)
+
+	var disconnected: Array[StreamPeerTCP] = []
+	for peer in peers:
+		if peer.get_status() != StreamPeerTCP.STATUS_CONNECTED:
+			disconnected.append(peer)
+			continue
+
+		var available = peer.get_available_bytes()
+		if available > 0:
+			var raw = peer.get_utf8_string(available)
+			_handle_http_request(peer, raw)
+
+	for peer in disconnected:
+		peers.erase(peer)
+
+func _handle_http_request(peer: StreamPeerTCP, raw: String) -> void:
+	var header_end := raw.find("\r\n\r\n")
+	if header_end < 0:
+		_send_http_error(peer, 400, "Invalid HTTP request")
+		return
+
+	var header_section := raw.substr(0, header_end)
+	var body := raw.substr(header_end + 4)
+
+	var lines := header_section.split("\r\n")
+	var request_line := lines[0].split(" ")
+	var method := request_line[0]
+	var path := request_line[1] if request_line.size() > 1 else "/"
+
+	var headers := {}
+	for i in range(1, lines.size()):
+		var colon := lines[i].find(":")
+		if colon > 0:
+			headers[lines[i].left(colon).to_lower()] = lines[i].substr(colon + 1).strip_edges()
+
+	if method == "OPTIONS":
+		_send_cors_response(peer)
+		return
+
+	if method == "GET" and (path == "/" or path == "/mcp"):
+		_send_server_info(peer)
+		return
+
+	if method == "POST" and (path == "/mcp" or path == "/"):
+		var content_type := headers.get("content-type", "")
+		if not content_type.contains("application/json"):
+			_send_http_error(peer, 415, "Content-Type must be application/json")
+			return
+
+		if body.is_empty():
+			_send_http_error(peer, 400, "Empty request body")
+			return
+
+		var json := JSON.new()
+		if json.parse(body) != OK:
+			_send_http_error(peer, 400, "Invalid JSON: " + json.get_error_message())
+			return
+
+		var msg: Dictionary = json.get_data()
+		var response := _dispatch(msg)
+		_send_http_response(peer, response)
+		return
+
+	_send_http_error(peer, 404, "Not found. Use POST /mcp for MCP requests.")
+
+func _dispatch(msg: Dictionary) -> Dictionary:
+	var method: String = msg.get("method", "")
+	var id: Variant = msg.get("id", null)
+	var params: Dictionary = msg.get("params", {})
+
+	match method:
+		"initialize":
+			return _handle_initialize(id, params)
+		"notifications/initialized":
+			return {}
+		"tools/list":
+			return _handle_tools_list(id)
+		"tools/call":
+			return _handle_tool_call(id, params)
+		_:
+			return _create_error_response(id, -32601, "Method not found: " + method)
+
+func _create_response(id: Variant, result: Dictionary) -> Dictionary:
+	return {
+		"jsonrpc": "2.0",
+		"id": _normalize_id(id),
+		"result": result
+	}
+
+func _create_error_response(id: Variant, code: int, message: String) -> Dictionary:
+	return {
+		"jsonrpc": "2.0",
+		"id": _normalize_id(id),
+		"error": {"code": code, "message": message}
+	}
+
+func _normalize_id(id: Variant) -> Variant:
+	if typeof(id) == TYPE_FLOAT:
+		var integer: int = int(id)
+		if is_equal_approx(id, float(integer)):
+			return integer
+	return id
+
+func _handle_initialize(id: Variant, _params: Dictionary) -> Dictionary:
+	return _create_response(id, {
+		"protocolVersion": "2025-03-26",
+		"capabilities": {
+			"tools": {"listChanged": true}
+		},
+		"serverInfo": {
+			"name": mcp_name,
+			"version": "1.0.0"
+		}
+	})
+
+func _handle_tools_list(id: Variant) -> Dictionary:
+	var tool_defs: Array[Dictionary] = []
+	for tool_name in tools:
+		var tool: RuztaMCPTool = tools[tool_name]
+		tool_defs.append({
+			"name": tool.get_name().to_kebab_case(),
+			"description": tool.get_description(),
+			"inputSchema": _to_input_schema(tool.get_input()),
+			"x_category": "core",
+			"x_group": ""
+		})
+	return _create_response(id, {"tools": tool_defs})
+
+func _to_input_schema(inputs: Array[RuztaMCPTool.ToolInput]) -> Dictionary:
+	var properties := {}
+	var required: Array[String] = []
+	for input in inputs:
+		var prop := {}
+		match input.type:
+			RuztaMCPTool.ToolInputType.STRING:
+				prop["type"] = "string"
+			RuztaMCPTool.ToolInputType.NUMBER:
+				prop["type"] = "number"
+			RuztaMCPTool.ToolInputType.BOOLEAN:
+				prop["type"] = "boolean"
+		prop["description"] = input.description
+		properties[input.name] = prop
+		if input.required:
+			required.append(input.name)
+	var schema := {"type": "object", "properties": properties}
+	if not required.is_empty():
+		schema["required"] = required
+	return schema
+
+func _handle_tool_call(id: Variant, params: Dictionary) -> Dictionary:
+	var tool_name: String = params.get("name", "")
+	var arguments: Dictionary = params.get("arguments", {})
+
+	if not tools.has(tool_name):
+		return _create_response(id, {
+			"content": [{"type": "text", "text": "Tool not found: " + tool_name}],
+			"isError": true
+		})
+
+	var tool: RuztaMCPTool = tools[tool_name]
+	for input in tool.get_input():
+		if input.required and not arguments.has(input.name):
+			return _create_response(id, {
+				"content": [{"type": "text", "text": "Missing required argument: " + input.name}],
+				"isError": true
+			})
+	var typed_args: Dictionary[String, Variant] = {}
+	for key in arguments:
+		typed_args[key] = arguments[key]
+	var result: RuztaMCPTool.ToolResult = tool.execute(typed_args)
+	var content: Dictionary = {}
+	match result.type:
+		RuztaMCPTool.ToolResultType.TEXT:
+			if result.text.is_empty():
+				printerr("MCP: Tool '" + tool_name + "' TEXT result missing 'text' field")
+			content = {"type": "text", "text": result.text}
+		RuztaMCPTool.ToolResultType.IMAGE:
+			if result.data.is_empty():
+				printerr("MCP: Tool '" + tool_name + "' IMAGE result missing 'data' field")
+			content = {"type": "image", "data": result.data, "mimeType": result.mime_type if not result.mime_type.is_empty() else "image/png"}
+		RuztaMCPTool.ToolResultType.AUDIO:
+			if result.data.is_empty():
+				printerr("MCP: Tool '" + tool_name + "' AUDIO result missing 'data' field")
+			content = {"type": "audio", "data": result.data, "mimeType": result.mime_type if not result.mime_type.is_empty() else "audio/wav"}
+		RuztaMCPTool.ToolResultType.RESOURCE_LINK:
+			if result.uri.is_empty():
+				printerr("MCP: Tool '" + tool_name + "' RESOURCE_LINK result missing 'uri' field")
+			content = {"type": "resource_link", "uri": result.uri, "name": result.name, "description": result.description, "mimeType": result.mime_type}
+		RuztaMCPTool.ToolResultType.RESOURCE:
+			if result.uri.is_empty():
+				printerr("MCP: Tool '" + tool_name + "' RESOURCE result missing 'uri' field")
+			content = {"type": "resource", "resource": {"uri": result.uri, "mimeType": result.mime_type, "text": result.text}}
+	return _create_response(id, {"content": [content], "isError": result.is_error})
+
+func _send_http_response(peer: StreamPeerTCP, data: Dictionary) -> void:
+	var json_bytes := JSON.stringify(data).to_utf8_buffer()
+	var response := "HTTP/1.1 200 OK\r\n"
+	response += "Content-Type: application/json; charset=utf-8\r\n"
+	response += "Content-Length: " + str(json_bytes.size()) + "\r\n"
+	response += "Access-Control-Allow-Origin: *\r\n"
+	response += "Connection: close\r\n\r\n"
+	peer.put_data(response.to_utf8_buffer() + json_bytes)
+	peer.disconnect_from_host()
+
+func _send_http_error(peer: StreamPeerTCP, code: int, message: String) -> void:
+	var status_text := "Error"
+	match code:
+		400: status_text = "Bad Request"
+		404: status_text = "Not Found"
+		415: status_text = "Unsupported Media Type"
+	var body := message.to_utf8_buffer()
+	var response := "HTTP/1.1 " + str(code) + " " + status_text + "\r\n"
+	response += "Content-Type: text/plain; charset=utf-8\r\n"
+	response += "Content-Length: " + str(body.size()) + "\r\n"
+	response += "Access-Control-Allow-Origin: *\r\n"
+	response += "Connection: close\r\n\r\n"
+	peer.put_data(response.to_utf8_buffer() + body)
+	peer.disconnect_from_host()
+
+func _send_cors_response(peer: StreamPeerTCP) -> void:
+	var response := "HTTP/1.1 204 No Content\r\n"
+	response += "Access-Control-Allow-Origin: *\r\n"
+	response += "Access-Control-Allow-Methods: POST, GET, OPTIONS\r\n"
+	response += "Access-Control-Allow-Headers: Content-Type\r\n"
+	response += "Connection: close\r\n\r\n"
+	peer.put_data(response.to_utf8_buffer())
+	peer.disconnect_from_host()
+
+func _send_server_info(peer: StreamPeerTCP) -> void:
+	var info := {
+		"name": mcp_name,
+		"version": "1.0.0",
+		"transport": "http",
+		"protocol": "MCP 2025-03-26",
+		"endpoints": {"mcp": "POST /mcp"}
+	}
+	_send_http_response(peer, info)
+
+func _scan_tools() -> void:
+	tools.clear()
+	if include_validate:
+		var validate_tool = RuztaMCPToolValidate.new()
+		tools[validate_tool.get_name().to_kebab_case()] = validate_tool
+
+	_scan_directory("res://")
+
+func _scan_directory(path: String) -> void:
+	var dir = DirAccess.open(path)
+	if dir == null:
+		return
+
+	dir.list_dir_begin()
+
+	while true:
+		var name = dir.get_next()
+		if name == "":
+			break
+		if name.begins_with("."):
+			continue
+
+		var full = path.path_join(name)
+
+		if dir.current_is_dir():
+			if full.begins_with("res://addons"):
+				continue
+			_scan_directory(full)
+		elif full.ends_with(".rz"):
+			_try_load_tool(full)
+
+	dir.list_dir_end()
+
+func _try_load_tool(path: String) -> void:
+	var script = load(path)
+	if script == null:
+		return
+
+	var base = script.get_base_script()
+	if base == null:
+		return
+
+	if base.get_global_name() == "RuztaMCPTool":
+		var instance = script.new()
+		if instance is RuztaMCPTool:
+			if Engine.is_editor_hint() and not instance.for_editor():
+				return
+			var tool_name = instance.get_name().to_kebab_case()
+			if not tools.has(tool_name):
+				tools[tool_name] = instance
+				print("MCP: Registered tool - " + tool_name)
+
+class RuztaMCPToolValidate extends RuztaMCPTool:
+	func get_name() -> String:
+		return "validate-ruzta-script"
+
+	func get_description() -> String:
+		return "Run static analysis on a .rz script. Returns syntax errors, type errors, and warnings with line/column positions."
+
+	func get_input() -> Array[ToolInput]:
+		return [ToolInput("path", ToolInputType.STRING, "Resource path to .rz file (e.g. res://script.rz)", true)]
+
+	func execute(arguments: Dictionary[String, Variant]) -> ToolResult:
+		var path: String = arguments.get("path", "")
+		var project_path = ProjectSettings.globalize_path("res://")
+
+		var language = Engine.get_singleton("RuztaLanguage")
+		var file = FileAccess.open(path, FileAccess.READ)
+		if file == null:
+			return ToolResult(ToolResultType.TEXT, "Cannot open file: " + path + " in project: " + project_path, is_error: true)
+
+		var code = file.get_as_text()
+		file.close()
+
+		var result = language.validate(code, path, false, true, true, false)
+		result.erase("valid")
+		result["file_path"] = ProjectSettings.globalize_path(path)
+		var output = JSON.stringify(result, "  ")
+		return ToolResult(ToolResultType.TEXT, output)

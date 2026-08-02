@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="GdssMethod_Contrast" format=3 uid="uid://dneo7i5ivtdmo"]
+
+[ext_resource type="Script" uid="uid://cl73wavhya2we" path="res://addons/gdss/db/methods/contrast.gd" id="1_con"]
+
+[resource]
+script = ExtResource("1_con")
+method_name = "contrast"
+supported_prop_types = Array[int]([3])

@@ -1,0 +1,270 @@
+@meta {
+    name: "Playground"
+    description: "Ruzta Playground theme"
+    default_scheme: dark
+}
+
+@global var bg: "#180F0D"
+@global var bg_dark: "#0d0807"
+@global var bg_light: "#2a1f1a"
+@global var bg_hover: "#352820"
+@global var accent: "#fb922b"
+@global var accent_dim: "#c47020"
+@global var accent_light: "#fdba74"
+@global var text: "#ffffff"
+@global var text_dim: "#a0a0a0"
+@global var text_muted: "#666666"
+@global var error: "#ff6b6b"
+@global var warning: "#fbbf24"
+@global var success: "#4ade80"
+@global var border: "#3d2e25"
+@global var border_light: "#4a3830"
+@global var shadow: "#00000080"
+@global var font_size_main: 20
+@global var font_size_code: 20
+@global var font_size_small: 16
+@global var font_size_heading: 22
+
+@scheme dark {}
+
+@scheme light {
+    bg: "#f5f0eb"
+    bg_dark: "#e8e2dc"
+    bg_light: "#ffffff"
+    bg_hover: "#f0ebe5"
+    text: "#1a1412"
+    text_dim: "#6b5e54"
+    text_muted: "#9a8d83"
+    border: "#d4c8be"
+    border_light: "#c0b4aa"
+    shadow: "#00000020"
+}
+
+Button {
+    bg_color: $bg_light
+    border_color: $border
+    font_size: $font_size_main
+    font_color: $text
+    font_hover_color: $accent
+    font_pressed_color: $accent_light
+
+    :focus {
+        border_color: $accent
+    }
+}
+
+LinkButton {
+    font_size: $font_size_main
+    font_hover_color: $accent_light
+
+
+}
+
+Label {
+    font_size: $font_size_main
+    font_color: $text
+}
+
+LineEdit {
+    font_size: $font_size_main
+    font_color: $text
+    font_placeholder_color: $text_muted
+    bg_color: $bg_dark
+    border_color: $border
+    corner_radius: 6 6 6 6
+    caret_color: $accent
+
+    :focus {
+        border_color: $accent
+    }
+
+    :disabled {
+        bg_color: $bg
+        font_color: $text_muted
+        border_color: $border
+    }
+}
+
+TextEdit {
+    font_size: $font_size_code
+    font_color: $text
+    font_placeholder_color: $text_muted
+    bg_color: $bg_dark
+    border_color: $border
+    corner_radius: 6 6 6 6
+    caret_color: $accent
+    current_line_color: $bg_light
+
+    :focus {
+        border_color: $accent
+    }
+
+    :disabled {
+        bg_color: $bg
+        font_color: $text_muted
+    }
+}
+
+CodeEdit {
+    font_size: $font_size_code
+    font_color: $text
+    font_placeholder_color: $text_muted
+    bg_color: $bg_dark
+    border_color: $border
+    corner_radius: 6 6 6 6
+    caret_color: $accent
+    word_highlighted_color: $accent_light
+    breakpoint_color: $error
+    executing_line_color: $warning
+    code_folding_color: $text_muted
+	
+	completion_background_color: $bg
+	completion_selected_color: $accent 
+	completion_scroll_color: $accent
+
+    :focus {
+        border_color: $accent
+    }
+}
+
+RichTextLabel {
+    font_color: $text
+    bg_color: $bg_dark
+    border_color: $border
+    corner_radius: 6 6 6 6
+}
+
+ItemList {
+    font_size: $font_size_small
+    font_color: $text
+    bg_color: $bg_dark
+    border_color: $border
+    corner_radius: 6 6 6 6
+
+    :focus {
+        border_color: $accent
+    }
+}
+
+Panel {
+    bg_color: $bg
+    border_color: $border
+    corner_radius: 6 6 6 6
+}
+
+PanelContainer {
+    bg_color: $bg
+    border_color: $border
+    corner_radius: 6 6 6 6
+}
+
+
+TabBar {
+    font_size: $font_size_main
+    font_color: $text_dim
+    bg_color: $bg_dark
+    outline_size: 0
+
+    :hover {
+        font_color: $text
+    }
+}
+
+TabContainer {
+    font_size: $font_size_main
+    font_color: $text_dim
+    bg_color: $bg
+}
+
+ProgressBar {
+    bg_color: $bg_dark
+    font_color: $text
+    border_color: $border
+    corner_radius: 4 4 4 4
+}
+
+
+SpinBox {
+    font_color: $text
+    bg_color: $bg_dark
+    border_color: $border
+    corner_radius: 6 6 6 6
+
+    :focus {
+        border_color: $accent
+    }
+}
+
+CheckBox {
+    font_size: $font_size_main
+    font_color: $text
+    bg_color: $bg_dark
+    border_color: $border
+    font_hover_color: $accent
+
+}
+
+CheckButton {
+    font_size: $font_size_main
+    font_color: $text
+    bg_color: $bg_dark
+    border_color: $border
+    font_hover_color: $accent
+
+
+}
+
+MenuBar {
+    font_size: $font_size_main
+    font_color: $text
+    bg_color: $bg
+}
+
+PopupMenu {
+    font_size: $font_size_main
+    font_color: $text
+    bg_color: $bg
+    border_color: $border_light
+    corner_radius: 6 6 6 6
+}
+
+
+HSplitContainer {
+    bg_color: $bg
+}
+
+VSplitContainer {
+    bg_color: $bg
+}
+
+FoldableContainer {
+    bg_color: $bg
+    border_color: $border
+    corner_radius: 6 6 6 6
+}
+
+MenuButton {
+    font_size: $font_size_main
+    font_color: $text
+    bg_color: $bg
+
+    :hover {
+        bg_color: $bg_hover
+    }
+}
+
+OptionButton {
+    font_size: $font_size_main
+    font_color: $text
+    bg_color: $bg_dark
+    border_color: $border
+    corner_radius: 6 6 6 6
+
+    :hover {
+        border_color: $accent
+    }
+
+    :pressed {
+        bg_color: $bg_light
+    }
+}

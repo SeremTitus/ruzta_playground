@@ -1,0 +1,181 @@
+extends RefCounted
+
+const OUTPUT_PATH := "user://rz_output.tmp"
+
+signal run_finished
+signal output_received(text: String)
+
+var running_node: Node = null
+var _output_poll_timer: Timer
+var _owner: Node
+var _current_temp_path: String = ""
+
+func _init(owner: Node) -> void:
+	_owner = owner
+
+func run(code: String) -> String:
+	_write_output_file("")
+	if code.strip_edges().length() == 0:
+		return "No code to run"
+	if _current_temp_path.length() > 0:
+		DirAccess.remove_absolute(_current_temp_path)
+	var modified := _build_runnable(code)
+	_current_temp_path = "user://rz_playground_run_%d.tmp.rz" % Time.get_ticks_msec()
+	var f := FileAccess.open(_current_temp_path, FileAccess.WRITE)
+	if f == null:
+		return "Failed to write temp file"
+	f.store_string(modified)
+	f.close()
+	var script := load(_current_temp_path)
+	if script == null:
+		return "Failed to load script"
+	var node = script.new()
+	if node == null:
+		return "Failed to instantiate script"
+	running_node = node as Node
+	if running_node == null:
+		running_node = null
+		return "Script must extend Node"
+	running_node.tree_exiting.connect(_on_run_finished)
+	_owner.add_child(running_node)
+	_start_output_polling()
+	return ""
+
+func stop() -> void:
+	_stop_output_polling()
+	if running_node != null and is_instance_valid(running_node):
+		running_node.tree_exiting.disconnect(_on_run_finished)
+		running_node.queue_free()
+		running_node = null
+
+func clear_output() -> void:
+	_write_output_file("")
+
+func _on_run_finished() -> void:
+	_stop_output_polling()
+	running_node = null
+	run_finished.emit()
+
+func _start_output_polling() -> void:
+	if _output_poll_timer != null:
+		_output_poll_timer.queue_free()
+	_output_poll_timer = Timer {
+		name = "OutputPollTimer"
+		autostart = true
+		one_shot = false
+		wait_time = 0.15
+		timeout.connect(_poll_output)
+	}
+	_owner.add_child(_output_poll_timer)
+
+func _stop_output_polling() -> void:
+	if _output_poll_timer != null:
+		_output_poll_timer.stop()
+		_output_poll_timer.queue_free()
+		_output_poll_timer = null
+
+func _poll_output() -> void:
+	var f := FileAccess.open(OUTPUT_PATH, FileAccess.READ)
+	if f == null:
+		return
+	var content: String = f.get_as_text()
+	f.close()
+	if content.length() > 0:
+		_write_output_file("")
+		output_received.emit(content)
+
+func _write_output_file(text: String) -> void:
+	var f := FileAccess.open(OUTPUT_PATH, FileAccess.WRITE)
+	if f != null:
+		f.store_string(text)
+		f.close()
+
+func _build_runnable(code: String) -> String:
+	var rewritten := _replace_print(code)
+	var out_func := "\nfunc _playground_out(...args: Array) -> void:\n"
+	out_func += "\tvar parts: Array[String] = []\n"
+	out_func += "\tfor arg in args:\n"
+	out_func += "\t\tparts.append(str(arg))\n"
+	out_func += "\tvar line := \" \".join(parts)\n"
+	out_func += "\tvar f := FileAccess.open(\"%s\", FileAccess.READ_WRITE)\n" % OUTPUT_PATH
+	out_func += "\tif f == null:\n"
+	out_func += "\t\tf = FileAccess.open(\"%s\", FileAccess.WRITE)\n" % OUTPUT_PATH
+	out_func += "\tif f != null:\n"
+	out_func += "\t\tf.seek_end()\n"
+	out_func += "\t\tf.store_line(line)\n"
+	out_func += "\t\tf.close()\n"
+	return rewritten + out_func
+
+func _replace_print(code: String) -> String:
+	var result := ""
+	var length := code.length()
+	var i := 0
+	while i < length:
+		if code[i] == "#":
+			var end := code.find("\n", i)
+			if end == -1:
+				result += code.substr(i)
+				break
+			result += code.substr(i, end - i + 1)
+			i = end + 1
+			continue
+		if code[i] == "\"":
+			if i + 2 < length and code[i + 1] == "\"" and code[i + 2] == "\"":
+				var end := code.find("\"\"\"", i + 3)
+				if end == -1:
+					result += code.substr(i)
+					break
+				end += 3
+				result += code.substr(i, end - i)
+				i = end
+				continue
+			else:
+				var j := i + 1
+				while j < length:
+					if code[j] == "\\":
+						j += 2
+						continue
+					if code[j] == "\"":
+						break
+					j++
+				result += code.substr(i, j - i + 1)
+				i = j + 1
+				continue
+		if code[i] == "'":
+			var j := i + 1
+			while j < length:
+				if code[j] == "\\":
+					j += 2
+					continue
+				if code[j] == "'":
+					break
+				j++
+			result += code.substr(i, j - i + 1)
+			i = j + 1
+			continue
+		if i + 5 < length and code.substr(i, 6) == "print(":
+			if i == 0 or not _is_alpha_num(code[i - 1]):
+				result += "_playground_out("
+				i += 6
+				continue
+		if i + 6 < length and code.substr(i, 7) == "prints(":
+			if i == 0 or not _is_alpha_num(code[i - 1]):
+				result += "_playground_out("
+				i += 7
+				continue
+		if i + 8 < length and code.substr(i, 9) == "printerr(":
+			if i == 0 or not _is_alpha_num(code[i - 1]):
+				result += "_playground_out("
+				i += 9
+				continue
+		if i + 11 < length and code.substr(i, 12) == "print_debug(":
+			if i == 0 or not _is_alpha_num(code[i - 1]):
+				result += "_playground_out("
+				i += 12
+				continue
+		result += code[i]
+		i++
+	return result
+
+func _is_alpha_num(c: String) -> bool:
+	return (c >= "a" and c <= "z") or (c >= "A" and c <= "Z") or (c >= "0" and c <= "9") or c == "_"

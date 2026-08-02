@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="GdssMethod_Alpha" format=3 uid="uid://c7xts8intfulr"]
+
+[ext_resource type="Script" uid="uid://cntr3i1m37afd" path="res://addons/gdss/db/methods/alpha.gd" id="1_alp"]
+
+[resource]
+script = ExtResource("1_alp")
+method_name = "alpha"
+supported_prop_types = Array[int]([3])

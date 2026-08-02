@@ -1,0 +1,94 @@
+@tool
+extends EditorPlugin
+
+var tool_menu_item_1 := "Ruzta convert .gd to .rz - exclude addons( save your work first)"
+var tool_menu_item_2 := "Ruzta convert all .gd to .rz ( save your work first)"
+var tool_menu_item_mcp := "Start ruzta MCP (http://localhost:7778/mcp)"
+
+var mcp_server := RuztaMCPServer.new(true)
+
+func _enter_tree() -> void:
+	add_child(mcp_server)
+	add_tool_menu_item(tool_menu_item_1, convert_gd_rz)
+	add_tool_menu_item(tool_menu_item_2, convert_gd_rz.bind(false))
+	add_tool_menu_item(tool_menu_item_mcp, toggle_mcp)
+
+func _exit_tree() -> void:
+	remove_tool_menu_item(tool_menu_item_1)
+	remove_tool_menu_item(tool_menu_item_2)
+	remove_tool_menu_item(tool_menu_item_mcp)
+	if mcp_server:
+		mcp_server.stop_server()
+		mcp_server.queue_free()
+		mcp_server = null
+
+func toggle_mcp() -> void:
+	if mcp_server and mcp_server.running:
+		mcp_server.stop_server()
+		remove_tool_menu_item(tool_menu_item_mcp)
+		tool_menu_item_mcp = "Start ruzta MCP (http://localhost:7778/mcp)"
+	else:
+		mcp_server.start_server()
+		remove_tool_menu_item(tool_menu_item_mcp)
+		tool_menu_item_mcp = "Stop ruzta MCP (http://localhost:7778/mcp)"
+	add_tool_menu_item(tool_menu_item_mcp, toggle_mcp)
+
+func convert_gd_rz(exclude_addons := true):
+	var gd_files: Array[String] = []
+	var all_files: Array[String] = []
+	
+	_scan("res://", gd_files, all_files, exclude_addons)
+	
+	# Rename scripts first
+	for gd_path in gd_files:
+		var rz_path := gd_path.get_basename() + ".rz"
+	
+		var err := DirAccess.rename_absolute(gd_path, rz_path)
+		if err != OK:
+			push_error("Failed to rename: %s" % gd_path)
+		else:
+			DirAccess.rename_absolute(gd_path + ".uid", gd_path.get_basename() + ".rz.uid")
+	
+	# Update references
+	for file in all_files:
+		if file.get_extension() not in ["tscn", "tres", "gd", "cfg", "txt", "json", ".godot"]:
+			continue
+		var file_access := FileAccess.open(file, FileAccess.READ)
+		if file_access == null: continue
+		var text := file_access.get_as_text()
+		file_access.close()
+		if text.contains(".gd"):
+			text = text.replace(".gd", ".rz")
+			file_access = FileAccess.open(file, FileAccess.WRITE)
+			file_access.store_string(text)
+			file_access.close()
+	
+	# Refresh editor
+	EditorInterface.get_resource_filesystem().scan()
+	
+	print("GDScript to Ruzta Conversion Done.")
+
+func _scan( path: String, gd_files: Array[String], all_files: Array[String], exclude_addons: bool):
+	var dir := DirAccess.open(path)
+	if dir == null:
+		return
+	
+	dir.list_dir_begin()
+	
+	while true:
+		var name := dir.get_next()
+		if name == "": break
+		if name.begins_with("."): continue
+			
+		var full := path.path_join(name)
+		
+		if dir.current_is_dir():
+			if exclude_addons and full.begins_with("res://addons"): continue
+			_scan(full, gd_files, all_files, exclude_addons)
+			
+		else:
+			all_files.append(full)
+			if full.ends_with(".gd"):
+				gd_files.append(full)
+	
+	dir.list_dir_end()

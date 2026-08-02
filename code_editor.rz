@@ -1,0 +1,362 @@
+extends RefCounted
+
+const SIZE_EXPAND_FILL := 3
+
+signal code_changed(content: String)
+signal validation_updated(error_count: int, errors: Array, warnings: Array)
+signal error_clicked(line: int)
+
+var code_edit: CodeEdit
+var _validation_timer: Timer
+var _completion_timer: Timer
+var _owner: Node
+
+var _error_color := Color(0.85, 0.2, 0.2, 0.15)
+var _warning_color := Color(0.9, 0.75, 0.1, 0.12)
+
+var _base_font_size: int = 20
+var _zoom_factor: float = 1.0
+
+var error_list: ItemList
+var error_toggle_btn: Button
+var error_binder: Label
+var error_container: VBoxContainer
+var _error_collapsed: bool = false
+var _has_errors_only: bool = false
+
+func _init(owner: Node) -> void:
+	_owner = owner
+
+func build() -> VBoxContainer:
+	code_edit = CodeEdit {
+		name = "CodeEditor"
+		size_flags_horizontal = SIZE_EXPAND_FILL
+		size_flags_vertical = SIZE_EXPAND_FILL
+		placeholder_text = "# Write Ruzta code here..."
+		draw_tabs = true
+		draw_spaces = true
+		gutters_draw_line_numbers = true
+		minimap_draw = true
+		minimap_width = 70
+		scroll_smooth = true
+		highlight_current_line = true
+		caret_blink = true
+		caret_blink_interval = 0.5
+		code_completion_enabled = true
+		code_completion_prefixes = [".", "(", "=", "$", "@", "\"", "'"]
+		syntax_highlighter = RuztaSyntaxHighlighter.new()
+		text_changed.connect(_on_text_changed)
+		code_completion_requested.connect(_on_code_completion)
+		gui_input.connect(_on_gui_input)
+	}
+	
+	_validation_timer = Timer {
+		name = "ValidationTimer"
+		autostart = false
+		one_shot = true
+		wait_time = 1
+		timeout.connect(_validate_code)
+	}
+	_owner.add_child(_validation_timer)
+
+	_completion_timer = Timer {
+		name = "CompletionTimer"
+		autostart = false
+		one_shot = true
+		wait_time = 0.3
+		timeout.connect(_on_completion_timer_timeout)
+	}
+	_owner.add_child(_completion_timer)
+
+	error_list = ItemList {
+		name = "ErrorList"
+		size_flags_horizontal = SIZE_EXPAND_FILL
+		custom_minimum_size = Vector2(0, 80)
+		max_columns = 1
+		icon_mode = ItemList.ICON_MODE_LEFT
+		select_mode = ItemList.SELECT_SINGLE
+		allow_reselect = true
+		item_clicked.connect(_on_error_item_clicked)
+		visible = false
+	}
+
+	error_toggle_btn = Button {
+		name = "ErrorToggle"
+		text = "Errors (0)"
+		custom_minimum_size = Vector2(0.0, 22.0)
+		visible = false
+		pressed.connect(_on_error_toggle)
+	}
+	
+	error_binder = Label {
+		text = "F7: Toggle Errors"
+	}
+
+	error_container = VBoxContainer {
+		name = "ErrorContainer"
+		size_flags_horizontal = SIZE_EXPAND_FILL
+		add_child(error_list)
+		visible = false
+	}
+
+	var keybindings := HBoxContainer {
+		name = "Keybindings"
+		size_flags_horizontal = SIZE_EXPAND_FILL
+		custom_minimum_size = Vector2(0.0, 22.0)
+		
+		Label {
+			text = "F5: Run"
+		}
+		Label {
+			text = "F6: Stop"
+		}
+		Label {
+			text = "Ctrl+/: Comment"
+		}
+		Label {
+			text = "Ctrl+/-: Zoom"
+		}
+		Label {
+			text = "Ctrl+0: Reset Zoom"
+		}
+		
+		add_child(error_binder)
+		
+		Control {
+			size_flags_horizontal = SIZE_EXPAND_FILL
+		}
+		
+		add_child(error_toggle_btn)
+	}
+	
+	load("res://addons/gdss/gdss.gd").set_prop_override(keybindings, "separation", 10)
+	
+	var root := VBoxContainer {
+		name = "EditorRoot"
+		size_flags_horizontal = SIZE_EXPAND_FILL
+		size_flags_vertical = SIZE_EXPAND_FILL
+
+		add_child(code_edit)
+		add_child(error_container)
+		add_child(keybindings)
+	}
+	return root
+
+func set_text(text: String) -> void:
+	code_edit.text = text
+	code_edit.clear_undo_history()
+	_validate_code()
+
+func get_text() -> String:
+	return code_edit.text
+
+func set_errors(errors: Array, warnings: Array) -> void:
+	error_list.clear()
+	for err: Dictionary in errors:
+		var line: int = err.get("line", -1)
+		var msg: String = err.get("message", "")
+		var text := "Line %d: %s" % [line, msg]
+		var idx: int = error_list.add_item(text)
+		error_list.set_item_metadata(idx, line)
+		error_list.set_item_custom_fg_color(idx, Color(1.0, 0.4, 0.4))
+	for warn: Dictionary in warnings:
+		var line: int = warn.get("start_line", -1)
+		var msg: String = warn.get("message", "")
+		var string_code: String = warn.get("string_code", "")
+		var text: String
+		if string_code.length() > 0:
+			text = "Line %d [%s]: %s" % [line, string_code, msg]
+		else:
+			text = "Line %d: %s" % [line, msg]
+		var idx: int = error_list.add_item(text)
+		error_list.set_item_metadata(idx, line)
+		error_list.set_item_custom_fg_color(idx, Color(1.0, 0.85, 0.3))
+	var total: int = errors.size() + warnings.size()
+	_has_errors_only = errors.size() > 0 and warnings.size() == 0
+	_update_error_toggle_text(total)
+	var has_any: bool = total > 0
+	error_toggle_btn.visible = has_any
+	error_container.visible = has_any
+	error_binder.visible = has_any
+	error_list.visible = has_any and not _error_collapsed
+
+func _update_error_toggle_text(total: int) -> void:
+	var label: String = "Errors" if _has_errors_only else "Warnings"
+	error_binder.text = "F7: Toggle Errors" if _has_errors_only else "F7: Toggle Warnings"
+	error_toggle_btn.text = "%s (%d)" % [label, total]
+	if not _error_collapsed:
+		error_toggle_btn.icon = load("res://icons/chevron_down.svg")
+	else:
+		error_toggle_btn.icon = load("res://icons/chevron_up.svg")
+	if _has_errors_only:
+		load("res://addons/gdss/gdss.gd").set_prop_override(error_toggle_btn, "font_color", Color.RED)
+	else:
+		load("res://addons/gdss/gdss.gd").set_prop_override(error_toggle_btn, "font_color", Color(1.0, 0.85, 0.3))
+
+func _on_error_toggle() -> void:
+	toggle_errors()
+
+func toggle_errors() -> void:
+	_error_collapsed = not _error_collapsed
+	error_list.visible = not _error_collapsed and error_container.visible
+	var total: int = error_list.item_count
+	_update_error_toggle_text(total)
+
+func _on_error_item_clicked(index: int, _at_position: Vector2, _mouse_button: int) -> void:
+	var line: int = error_list.get_item_metadata(index)
+	if line > 0:
+		error_clicked.emit(line)
+
+func _on_gui_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed:
+		if event.ctrl_pressed:
+			if event.keycode == KEY_EQUAL:
+				_zoom_in()
+				code_edit.accept_event()
+			elif event.keycode == KEY_MINUS:
+				_zoom_out()
+				code_edit.accept_event()
+			elif event.keycode == KEY_0:
+				_zoom_reset()
+				code_edit.accept_event()
+			elif event.keycode == KEY_SLASH:
+				_toggle_comments()
+				code_edit.accept_event()
+		elif event is InputEventMouseButton and event.pressed:
+			if event.ctrl_pressed:
+				if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+					_zoom_in()
+					code_edit.accept_event()
+				elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+					_zoom_out()
+					code_edit.accept_event()
+
+func _zoom_in() -> void:
+	_zoom_factor = clampf(_zoom_factor + 0.1, 0.25, 3.0)
+	_apply_zoom()
+
+func _zoom_out() -> void:
+	_zoom_factor = clampf(_zoom_factor - 0.1, 0.25, 3.0)
+	_apply_zoom()
+
+func _zoom_reset() -> void:
+	_zoom_factor = 1.0
+	_apply_zoom()
+
+func _apply_zoom() -> void:
+	var new_size: int = maxi(8, roundi(_base_font_size * _zoom_factor))
+	load("res://addons/gdss/gdss.gd").set_prop_override(code_edit, "font_size", new_size)
+
+func _toggle_comments() -> void:
+	var selection_start: int = code_edit.get_selection_from_line()
+	var selection_end: int = code_edit.get_selection_to_line()
+	var has_selection: bool = code_edit.has_selection()
+
+	if not has_selection:
+		selection_start = code_edit.get_caret_line()
+		selection_end = selection_start
+
+	var all_commented := true
+	for i in range(selection_start, selection_end + 1):
+		var line_text: String = code_edit.get_line(i).strip_edges()
+		if line_text.length() > 0 and not line_text.begins_with("#"):
+			all_commented = false
+			break
+
+	for i in range(selection_start, selection_end + 1):
+		var line_text: String = code_edit.get_line(i)
+		if all_commented:
+			var stripped: String = line_text.strip_edges()
+			if stripped.begins_with("#"):
+				var indent: String = line_text.substr(0, line_text.length() - line_text.lstrip(" ").length())
+				var after_comment: String = stripped.substr(1).lstrip(" ")
+				code_edit.set_line(i, indent + after_comment)
+		else:
+			var indent: String = line_text.substr(0, line_text.length() - line_text.lstrip(" ").length())
+			code_edit.set_line(i, indent + "# " + line_text.lstrip(" "))
+
+func _on_text_changed() -> void:
+	code_changed.emit(code_edit.text)
+	_validation_timer.start()
+	code_edit.cancel_code_completion()
+	_completion_timer.start()
+
+func _on_completion_timer_timeout() -> void:
+	code_edit.request_code_completion(false)
+
+func _validate_code() -> void:
+	var text: String = code_edit.text
+	_clear_line_highlights()
+	if text.strip_edges().length() == 0:
+		validation_updated.emit(0, [], [])
+		return
+	var result: Dictionary = RuztaLanguage.validate(text, "playground", true, true, true, true)
+	var error_array: Array = result.get("errors", [])
+	var warning_array: Array = result.get("warnings", [])
+	_add_playground_warnings(text, error_array, warning_array)
+	var count: int = error_array.size() + warning_array.size()
+	_highlight_errors(error_array)
+	_highlight_warnings(warning_array)
+	validation_updated.emit(count, error_array, warning_array)
+
+func _add_playground_warnings(text: String, errors: Array, warnings: Array) -> void:
+	var lines: Array = text.split("\n")
+	for i in lines.size():
+		var line: String = lines[i]
+		var stripped: String = line.strip_edges()
+		if stripped.begins_with("class_name") and (stripped.length() == 10 or stripped[10] == " " or stripped[10] == "\t"):
+			warnings.append({"start_line": i + 1, "end_line": i + 1, "message": "Playground does not support globals yet (class_name)"})
+		elif stripped.begins_with("trait_name") and (stripped.length() == 10 or stripped[10] == " " or stripped[10] == "\t"):
+			errors.append({"line": i + 1, "message": "Playground does not support globals yet (trait_name)"})
+		elif stripped.find("load(") != -1:
+			warnings.append({"start_line": i + 1, "end_line": i + 1, "message": "Playground does not support load()"})
+		elif stripped.find("preload(") != -1:
+			warnings.append({"start_line": i + 1, "end_line": i + 1, "message": "Playground does not support preload()"})
+
+func _clear_line_highlights() -> void:
+	for i in code_edit.get_line_count():
+		code_edit.set_line_background_color(i, Color(0, 0, 0, 0))
+
+func _highlight_errors(errors: Array) -> void:
+	for err: Dictionary in errors:
+		var line: int = err.get("line", -1)
+		if line > 0:
+			var idx: int = line - 1
+			if idx < code_edit.get_line_count():
+				code_edit.set_line_background_color(idx, _error_color)
+
+func _highlight_warnings(warnings: Array) -> void:
+	for warn: Dictionary in warnings:
+		var start_line: int = warn.get("start_line", -1)
+		var end_line: int = warn.get("end_line", -1)
+		if start_line > 0:
+			var start_idx: int = start_line - 1
+			var end_idx: int = end_line - 1 if end_line > 0 else start_idx
+			end_idx = mini(end_idx, start_idx + 20)
+			for i in range(start_idx, mini(end_idx + 1, code_edit.get_line_count())):
+				if code_edit.get_line_background_color(i).a < 0.01:
+					code_edit.set_line_background_color(i, _warning_color)
+
+func goto_error_line(line: int) -> void:
+	if line > 0:
+		code_edit.set_caret_line(line)
+		code_edit.center_viewport_to_caret()
+
+func _on_code_completion() -> void:
+	var text: String = code_edit.get_text_for_code_completion()
+	var result := RuztaLanguage.complete_code(text, "playground", _owner)
+	var options: Array = result.get("options", [])
+	var forced: bool = result.get("force", false)
+	for item: Dictionary in options:
+		var display: String = item.get("display", "")
+		var insert_text: String = item.get("insert_text", "")
+		var kind: int = item.get("kind", 9)
+		var item_color: Color = item.get("font_color", Color.WHITE)
+		if item_color.a < 0.1 or (item_color.r < 0.2 and item_color.g < 0.2 and item_color.b < 0.2):
+			item_color = Color(0.85, 0.85, 0.85)
+		var icon: Variant = item.get("icon", null)
+		var default_value: Variant = item.get("default_value", null)
+		var location: int = item.get("location", 1024)
+		if display.length() > 0:
+			code_edit.add_code_completion_option(kind, display, insert_text, item_color, icon, default_value, location)
+	code_edit.update_code_completion_options(forced)

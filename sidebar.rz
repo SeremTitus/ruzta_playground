@@ -1,0 +1,118 @@
+extends RefCounted
+
+const SIZE_EXPAND_FILL := 3
+
+signal file_selected(name: String)
+signal file_renamed(old_name: String, new_name: String)
+signal new_file_requested
+signal delete_file_requested(name: String)
+
+var _item_container: VBoxContainer
+var _owner: Node
+var _selected_name: String = ""
+
+func _init(owner: Node) -> void:
+	_owner = owner
+
+func build() -> MarginContainer:
+	_item_container = VBoxContainer.new()
+	_item_container.name = "ItemList"
+	_item_container.size_flags_horizontal = SIZE_EXPAND_FILL
+	_item_container.size_flags_vertical = SIZE_EXPAND_FILL
+
+	var panel := MarginContainer {
+		name = "SidePanel"
+		size_flags_vertical = SIZE_EXPAND_FILL
+		custom_minimum_size = Vector2(180.0, 0.0)
+		offset_left = 4.0
+		offset_top = 4.0
+		offset_right = -2.0
+		offset_bottom = -4.0
+
+		VBoxContainer {
+			name = "SideRoot"
+			size_flags_horizontal = SIZE_EXPAND_FILL
+			size_flags_vertical = SIZE_EXPAND_FILL
+
+			Button {
+				text = "+ Add New Script"
+				custom_minimum_size = Vector2(0.0, 28.0)
+				size_flags_horizontal = SIZE_EXPAND_FILL
+				tooltip_text = "Create new script"
+				pressed.connect(_on_new_pressed)
+			}
+
+			ScrollContainer {
+				name = "FileScroll"
+				size_flags_horizontal = SIZE_EXPAND_FILL
+				size_flags_vertical = SIZE_EXPAND_FILL
+				add_child(_item_container)
+			}
+		}
+	}
+	return panel
+
+func refresh(names: Array, selected: String) -> void:
+	_selected_name = selected
+	for child in _item_container.get_children():
+		child.queue_free()
+	for name in names:
+		_add_item(name)
+
+func _add_item(name: String) -> void:
+	var row := HBoxContainer.new()
+	row.name = "Item_" + name
+	row.size_flags_horizontal = SIZE_EXPAND_FILL
+
+	var btn := Button.new()
+	btn.name = "Btn_" + name
+	btn.text = name + ".rz"
+	btn.size_flags_horizontal = SIZE_EXPAND_FILL
+	btn.size_flags_vertical = 0
+	btn.clip_text = true
+	btn.tooltip_text = "Click to select, double-click to rename"
+	btn.pressed.connect(_on_item_pressed.bind(name))
+	btn.gui_input.connect(_on_item_gui_input.bind(name))
+
+	var del_btn := Button.new()
+	del_btn.name = "Del_" + name
+	del_btn.text = "X"
+	del_btn.custom_minimum_size = Vector2(24.0, 24.0)
+	del_btn.tooltip_text = "Delete " + name + ".rz"
+	del_btn.pressed.connect(_on_delete_item_pressed.bind(name))
+
+	row.add_child(btn)
+	row.add_child(del_btn)
+	_item_container.add_child(row)
+
+func _on_item_pressed(name: String) -> void:
+	_selected_name = name
+	file_selected.emit(name)
+
+func _on_item_gui_input(event: InputEvent, name: String) -> void:
+	if event is InputEventMouseButton and event.pressed and event.double_click:
+		_show_rename_dialog(name)
+
+func _show_rename_dialog(old_name: String) -> void:
+	var dialog := AcceptDialog.new()
+	dialog.title = "Rename " + old_name + ".rz"
+	var input := LineEdit.new()
+	input.text = old_name
+	input.size_flags_horizontal = SIZE_EXPAND_FILL
+	dialog.add_child(input)
+	dialog.confirmed.connect(func() -> void:
+		var new_name: String = input.text.strip_edges()
+		if new_name.length() > 0 and new_name != old_name:
+			file_renamed.emit(old_name, new_name)
+		dialog.queue_free()
+	)
+	_owner.add_child(dialog)
+	dialog.popup_centered(Vector2i(300, 80))
+	input.grab_focus()
+	input.select_all()
+
+func _on_new_pressed() -> void:
+	new_file_requested.emit()
+
+func _on_delete_item_pressed(name: String) -> void:
+	delete_file_requested.emit(name)

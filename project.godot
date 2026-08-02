@@ -1,0 +1,43 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="playground"
+run/main_scene="uid://bqiugo5gxprhe"
+config/features=PackedStringArray("4.7")
+run/low_processor_mode=true
+
+[autoload]
+
+GdssRuntime="*uid://yu6lhnx763yp"
+
+[debug]
+
+settings/ruzta/max_call_stack=1024
+settings/ruzta/always_track_call_stacks=false
+settings/ruzta/always_track_local_variables=false
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/gdss/plugin.cfg", "res://addons/ruzta/plugin.cfg")
+
+[gdss]
+
+internal/initialized=true
+editor/use_minimap=true
+editor/show_outline=true
+binding/root_default=1
+storage/save_uid="uid://cc8larwkvxbft"
+storage/save_paths=PackedStringArray("res://theme.tgdss")
+
+[rendering]
+
+textures/vram_compression/import_etc2_astc=true

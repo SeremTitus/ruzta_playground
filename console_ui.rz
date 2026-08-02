@@ -1,0 +1,121 @@
+extends RefCounted
+
+const SIZE_EXPAND_FILL := 3
+
+signal run_requested
+signal stop_requested
+signal clear_requested
+
+var output: RichTextLabel
+var play_btn: Button
+var stop_btn: Button
+var clear_btn: Button
+var _owner: Node
+var _is_running: bool = false
+
+func _init(owner: Node) -> void:
+	_owner = owner
+
+func build() -> VBoxContainer:
+	output = RichTextLabel.new()
+	output.name = "Console"
+	output.custom_minimum_size.y = 200
+	output.bbcode_enabled = true
+	output.scroll_following = true
+	output.selection_enabled = true
+	output.scroll_active = true
+	output.visible = false
+
+	var bg_style := StyleBoxFlat.new()
+	bg_style.bg_color = Color(0.08, 0.08, 0.08)
+	bg_style.set_content_margin_all(6)
+
+	var play_icon := TextureRect.new()
+	play_icon.texture = load("res://icons/play.svg")
+	play_icon.custom_minimum_size = Vector2(16.0, 16.0)
+	play_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+
+	play_btn = Button.new()
+	play_btn.name = "PlayBtn"
+	play_btn.add_child(play_icon)
+	play_btn.custom_minimum_size = Vector2(28.0, 24.0)
+	play_btn.tooltip_text = "Run (F5)"
+	play_btn.pressed.connect(_on_play_pressed)
+
+	var stop_icon := TextureRect.new()
+	stop_icon.texture = load("res://icons/stop.svg")
+	stop_icon.custom_minimum_size = Vector2(16.0, 16.0)
+	stop_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+
+	stop_btn = Button.new()
+	stop_btn.name = "StopBtn"
+	stop_btn.add_child(stop_icon)
+	stop_btn.custom_minimum_size = Vector2(28.0, 24.0)
+	stop_btn.tooltip_text = "Stop"
+	stop_btn.pressed.connect(_on_stop_pressed)
+	stop_btn.disabled = true
+
+	var clear_icon := TextureRect.new()
+	clear_icon.texture = load("res://icons/clear.svg")
+	clear_icon.custom_minimum_size = Vector2(16.0, 16.0)
+	clear_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+
+	clear_btn = Button.new()
+	clear_btn.name = "ClearBtn"
+	clear_btn.add_child(clear_icon)
+	clear_btn.custom_minimum_size = Vector2(28.0, 24.0)
+	clear_btn.tooltip_text = "Clear console"
+	clear_btn.visible = false
+	clear_btn.pressed.connect(_on_clear_pressed)
+
+	var root := VBoxContainer {
+		name = "ConsoleRoot"
+		size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+		HBoxContainer {
+			name = "PlayBar"
+			custom_minimum_size = Vector2(0.0, 28.0)
+
+			add_child(play_btn)
+			add_child(stop_btn)
+			add_child(clear_btn)
+		}
+
+		add_child(HSeparator.new())
+		add_child(output)
+	}
+	return root
+
+func write_line(text: String) -> void:
+	output.visible = true
+	clear_btn.visible = true
+	output.append_text(text + "\n")
+
+func clear() -> void:
+	output.clear()
+	clear_btn.visible = false
+	if not _is_running:
+		output.visible = false
+
+func set_running(running: bool) -> void:
+	_is_running = running
+	if running:
+		play_btn.get_child(0).texture = load("res://icons/rerun.svg")
+		play_btn.tooltip_text = "Rerun (stops current, runs fresh)"
+		output.visible = true
+	else:
+		play_btn.get_child(0).texture = load("res://icons/play.svg")
+		play_btn.tooltip_text = "Run (F5)"
+		if output.get_parsed_text().strip_edges().length() == 0:
+			output.visible = false
+			clear_btn.visible = false
+	stop_btn.disabled = not running
+
+func _on_play_pressed() -> void:
+	run_requested.emit()
+
+func _on_stop_pressed() -> void:
+	stop_requested.emit()
+
+func _on_clear_pressed() -> void:
+	clear_requested.emit()

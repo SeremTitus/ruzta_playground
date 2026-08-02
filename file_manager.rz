@@ -1,0 +1,89 @@
+extends RefCounted
+
+const USER_DIR := "user://playground_scripts/"
+const DEFAULT_TEMPLATE := """extends Node # Keep it so or extend Node children
+
+func _ready() -> void:
+\tprint("Hello from Ruzta!")
+\tprint("Edit this code and press Run")
+"""
+
+var files: Dictionary = {}
+var current_name: String = ""
+
+func load_from_disk() -> void:
+	if not DirAccess.dir_exists_absolute(USER_DIR):
+		DirAccess.make_dir_recursive_absolute(USER_DIR)
+	var dir := DirAccess.open(USER_DIR)
+	if dir != null:
+		dir.list_dir_begin()
+		while true:
+			var file_name := dir.get_next()
+			if file_name == "":
+				break
+			if file_name.begins_with(".") or not file_name.ends_with(".rz"):
+				continue
+			var f := FileAccess.open(USER_DIR.path_join(file_name), FileAccess.READ)
+			if f != null:
+				files[file_name.get_basename()] = f.get_as_text()
+				f.close()
+		dir.list_dir_end()
+	if files.is_empty():
+		create("new_script", DEFAULT_TEMPLATE)
+
+func save_to_disk(name: String, content: String) -> void:
+	var f := FileAccess.open(USER_DIR.path_join(name + ".rz"), FileAccess.WRITE)
+	if f != null:
+		f.store_string(content)
+		f.close()
+
+func delete_from_disk(name: String) -> void:
+	DirAccess.remove_absolute(USER_DIR.path_join(name + ".rz"))
+
+func create(name: String, content: String) -> void:
+	files[name] = content
+	save_to_disk(name, content)
+
+func create_unique(base_name: String, content: String) -> String:
+	var name := base_name
+	var counter := 1
+	while files.has(name):
+		name = base_name + "_%d" % counter
+		counter++
+	create(name, content)
+	return name
+
+func save_current(p_current_name: String, content: String) -> void:
+	if p_current_name.length() > 0:
+		files[p_current_name] = content
+		save_to_disk(p_current_name, content)
+
+func delete(name: String) -> void:
+	delete_from_disk(name)
+	files.erase(name)
+
+func rename(old_name: String, new_name: String) -> bool:
+	if old_name == new_name:
+		return false
+	if files.has(new_name):
+		return false
+	if not files.has(old_name):
+		return false
+	var content: String = files[old_name]
+	delete_from_disk(old_name)
+	files.erase(old_name)
+	files[new_name] = content
+	save_to_disk(new_name, content)
+	return true
+
+func has(name: String) -> bool:
+	return files.has(name)
+
+func get_content(name: String) -> String:
+	return files.get(name, "")
+
+func get_names() -> Array:
+	return files.keys()
+
+func is_empty() -> bool:
+	return files.is_empty()

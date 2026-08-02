@@ -1,0 +1,163 @@
+extends Control
+
+var _fm
+var _sidebar
+var _editor
+var _console
+var _runner
+var _has_errors: bool = false
+var _has_warnings: bool = false
+
+func _ready() -> void:
+	anchors_preset = PRESET_FULL_RECT
+
+	_fm = load("uid://cej33xca2thil").new()
+	_sidebar = load("res://sidebar.rz").new(self)
+	_editor = load("res://code_editor.rz").new(self)
+	_console = load("res://console_ui.rz").new(self)
+	_runner = load("res://code_runner.rz").new(self)
+
+	_fm.load_from_disk()
+	_sidebar.file_selected.connect(_on_file_selected)
+	_sidebar.new_file_requested.connect(_on_new_file)
+	_sidebar.delete_file_requested.connect(_on_delete_file)
+	_sidebar.file_renamed.connect(_on_rename_file)
+	_editor.code_changed.connect(_on_code_changed)
+	_editor.validation_updated.connect(_on_validation_updated)
+	_editor.error_clicked.connect(_on_error_clicked)
+	_console.run_requested.connect(_on_run)
+	_console.stop_requested.connect(_on_stop)
+	_console.clear_requested.connect(_on_clear_console)
+	_runner.output_received.connect(_on_output_received)
+	_runner.run_finished.connect(_on_run_finished)
+
+	_build_ui()
+
+	if _fm.current_name.length() == 0:
+		_fm.current_name = "new_script"
+	_refresh_file_list()
+	_load_current_file()
+
+func _build_ui() -> void:
+	var sidebar_panel = _sidebar.build()
+	var code_edit = _editor.build()
+	var console_section = _console.build()
+
+	var center := VBoxContainer {
+		name = "CenterRoot"
+		size_flags_horizontal = 3
+		size_flags_vertical = 3
+		
+		HBoxContainer {
+			Control {
+				size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			}
+			
+			Label {
+				text = "Ruzta v"+ RuztaLanguage.get_version()
+			}
+		}
+		
+		add_child(code_edit)
+		add_child(console_section)
+	}
+
+	var splitter := HBoxContainer {
+		name = "Split"
+		anchor_right = 1.0
+		anchor_bottom = 1.0
+		offset_left = 0.0
+		offset_top = 0.0
+		offset_right = 0.0
+		offset_bottom = 0.0
+
+		add_child(sidebar_panel)
+		add_child(center)
+	}
+
+	add_child(splitter)
+
+func _refresh_file_list() -> void:
+	_sidebar.refresh(_fm.get_names(), _fm.current_name)
+
+func _load_current_file() -> void:
+	var content: String = _fm.get_content(_fm.current_name)
+	_editor.set_text(content)
+
+func _on_file_selected(p_name: String) -> void:
+	_fm.current_name = p_name
+	_load_current_file()
+
+func _on_new_file() -> void:
+	var unique_name: String = _fm.create_unique("new_script", _fm.DEFAULT_TEMPLATE)
+	_fm.current_name = unique_name
+	_refresh_file_list()
+	_load_current_file()
+
+func _on_delete_file(p_name: String) -> void:
+	_fm.delete(p_name)
+	if _fm.current_name == p_name:
+		var names: Array = _fm.get_names()
+		if names.size() > 0:
+			_fm.current_name = names[0]
+		else:
+			_fm.current_name = "new_script"
+			_fm.create("new_script",  _fm.DEFAULT_TEMPLATE)
+	_refresh_file_list()
+	_load_current_file()
+
+func _on_rename_file(old_name: String, new_name: String) -> void:
+	if _fm.rename(old_name, new_name):
+		_fm.current_name = new_name
+		_refresh_file_list()
+		_load_current_file()
+
+func _on_code_changed(content: String) -> void:
+	_fm.save_current(_fm.current_name, content)
+
+func _on_validation_updated(_error_count: int, errors: Array, warnings: Array) -> void:
+	_editor.set_errors(errors, warnings)
+	_has_errors = errors.size() > 0
+	_has_warnings = warnings.size() > 0
+
+func _on_error_clicked(line: int) -> void:
+	_editor.goto_error_line(line)
+
+func _on_run() -> void:
+	if _has_errors:
+		return
+	var code: String = _editor.get_text()
+	if code.strip_edges().length() == 0:
+		return
+	if _runner.running_node != null:
+		_runner.stop()
+	_fm.save_current(_fm.current_name, code)
+	_console.clear()
+	_console.output.visible = true
+	_console.set_running(true)
+	_runner.run(code)
+
+func _on_stop() -> void:
+	_runner.stop()
+	_console.set_running(false)
+
+func _on_clear_console() -> void:
+	_console.clear()
+
+func _on_output_received(line: String) -> void:
+	_console.write_line(line)
+
+func _on_run_finished() -> void:
+	_console.set_running(false)
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_F5:
+			_on_run()
+			get_viewport().set_input_as_handled()
+		elif event.keycode == KEY_F6:
+			_on_stop()
+			get_viewport().set_input_as_handled()
+		elif event.keycode == KEY_F7:
+			_editor.toggle_errors()
+			get_viewport().set_input_as_handled()
