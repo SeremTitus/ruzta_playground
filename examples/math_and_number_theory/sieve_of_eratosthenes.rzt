@@ -1,0 +1,35 @@
+# Sieve: mark multiples of each prime, the survivors are prime.
+
+extends Node
+
+func sieve(limit: int) -> Array[int]:
+	var is_prime: Array[bool] = []
+	var i := 0
+	while i <= limit:
+		is_prime.append(true)
+		i += 1
+	if limit >= 0:
+		is_prime[0] = false
+	if limit >= 1:
+		is_prime[1] = false
+
+	var n := 2
+	while n * n <= limit:
+		if is_prime[n]:
+			# Strike out multiples starting at n * n.
+			var multiple := n * n
+			while multiple <= limit:
+				is_prime[multiple] = false
+				multiple += n
+		n += 1
+
+	var primes: Array[int] = []
+	var value := 2
+	while value <= limit:
+		if is_prime[value]:
+			primes.append(value)
+		value += 1
+	return primes
+
+func _ready() -> void:
+	print("primes below 50:", sieve(50))

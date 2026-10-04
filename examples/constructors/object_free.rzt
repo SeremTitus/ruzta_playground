@@ -1,0 +1,12 @@
+# free() destroys an object immediately; is_instance_valid reports the result.
+extends Node
+
+func test() -> void:
+	var node := Node.new()
+	node.name = "Temporary"
+	print("created:", node.name)
+	node.free()
+	print("freed:", not is_instance_valid(node))
+
+func _ready() -> void:
+	test()

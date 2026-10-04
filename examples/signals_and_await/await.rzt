@@ -1,0 +1,13 @@
+# await suspends _ready until the signal is emitted.
+
+extends Node
+
+signal finished(result)
+
+func _ready() -> void:
+	call_deferred("emit_finished")
+	var result = await finished
+	print(result)
+
+func emit_finished() -> void:
+	finished.emit("done")

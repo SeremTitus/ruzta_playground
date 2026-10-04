@@ -1,0 +1,13 @@
+# Cross-script usage with preload: globals (class_name) stay disabled on purpose.
+# class_name Projectile  # global names are not supported in the playground
+extends Area2D
+
+const EnemyScript = preload("res://examples/class_and_global/enemy.rz")
+
+func spawn_enemy() -> void:
+	var enemy = EnemyScript.new()
+	add_child(enemy)
+
+func _ready() -> void:
+	spawn_enemy()
+	print("spawned enemies:", get_child_count())

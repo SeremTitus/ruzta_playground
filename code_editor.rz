@@ -11,6 +11,10 @@ var _validation_timer: Timer
 var _completion_timer: Timer
 var _owner: Node
 
+## Path of the script being edited, passed to the validator so it can resolve
+## inner classes and other per-script cache lookups.
+var script_path: String = "playground"
+
 var _error_color := Color(0.85, 0.2, 0.2, 0.15)
 var _warning_color := Color(0.9, 0.75, 0.1, 0.12)
 
@@ -30,7 +34,7 @@ func _init(owner: Node) -> void:
 func build() -> VBoxContainer:
 	code_edit = CodeEdit {
 		name = "CodeEditor"
-		size_flags_horizontal = SIZE_EXPAND_FILL
+		size_flags_horizontal = Control.SIZE_FILL
 		size_flags_vertical = SIZE_EXPAND_FILL
 		placeholder_text = "# Write Ruzta code here..."
 		draw_tabs = true
@@ -95,6 +99,20 @@ func build() -> VBoxContainer:
 	error_container = VBoxContainer {
 		name = "ErrorContainer"
 		size_flags_horizontal = SIZE_EXPAND_FILL
+
+		HBoxContainer {
+			name = "ErrorBar"
+			size_flags_horizontal = SIZE_EXPAND_FILL
+
+			add_child(error_binder)
+
+			Control {
+				size_flags_horizontal = SIZE_EXPAND_FILL
+			}
+
+			add_child(error_toggle_btn)
+		}
+
 		add_child(error_list)
 		visible = false
 	}
@@ -119,21 +137,17 @@ func build() -> VBoxContainer:
 		Label {
 			text = "Ctrl+0: Reset Zoom"
 		}
-		
-		add_child(error_binder)
-		
+
 		Control {
 			size_flags_horizontal = SIZE_EXPAND_FILL
 		}
-		
-		add_child(error_toggle_btn)
 	}
 	
 	load("res://addons/gdss/gdss.gd").set_prop_override(keybindings, "separation", 10)
 	
 	var root := VBoxContainer {
 		name = "EditorRoot"
-		size_flags_horizontal = SIZE_EXPAND_FILL
+		size_flags_horizontal = Control.SIZE_FILL
 		size_flags_vertical = SIZE_EXPAND_FILL
 
 		add_child(code_edit)
@@ -290,7 +304,7 @@ func _validate_code() -> void:
 	if text.strip_edges().length() == 0:
 		validation_updated.emit(0, [], [])
 		return
-	var result: Dictionary = RuztaLanguage.validate(text, "playground", true, true, true, true)
+	var result: Dictionary = RuztaLanguage.validate(text, script_path, true, true, true, true)
 	var error_array: Array = result.get("errors", [])
 	var warning_array: Array = result.get("warnings", [])
 	_add_playground_warnings(text, error_array, warning_array)

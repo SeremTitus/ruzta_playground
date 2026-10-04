@@ -8,5 +8,4 @@ name = "corner_detail"
 type = 0
 default_value = 8
 category = 0
-category_subproperties = PackedStringArray()
 metadata/_custom_type_script = "uid://b7gagsyfvnai7"

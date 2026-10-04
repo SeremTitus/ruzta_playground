@@ -1,0 +1,14 @@
+# Variadic parameters (...args) collect the trailing arguments into an array.
+
+extends Node
+
+func log_event(name: String, level: int = 0, ...args: Array) -> void:
+	prints(name, level, args)
+
+var collector := func(prefix: String, ...args: Array) -> void:
+	prints(prefix, args)
+
+func _ready() -> void:
+	log_event("spawn")
+	log_event("damage", 2, "orc", 15)
+	collector.call("values", 1, 2, 3)

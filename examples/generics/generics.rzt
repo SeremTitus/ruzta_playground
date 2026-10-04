@@ -1,0 +1,42 @@
+# @generic: parameterized classes and functions with explicit type arguments.
+
+extends Node
+
+@generic(T)
+class Box:
+	var value: T
+
+	func _init(v: T):
+		value = v
+
+	func get_value() -> T:
+		return value
+
+@generic(T)
+func identity(value: T) -> T:
+	return value
+
+@generic(K, V)
+func pick(values: Dictionary[K, V], key: K) -> V:
+	return values[key]
+
+@generic(T)
+func dup(value: T) -> (T, T):
+	return (value, value)
+
+@generic(T: Node)
+func child_as(parent: Node, index: int) -> T:
+	return parent.get_child(index) as T
+
+func test() -> void:
+	var int_box := Box<int>.new(10)
+	var str_box := Box<String>.new("hello")
+	print(int_box.get_value(), str_box.get_value())
+	print(identity(10), identity<int>(5), identity<String>("ok"))
+	var stats: Dictionary[String, int] = { "hp": 9 }
+	print(pick<String, int>(stats, "hp"))
+	var pair: (int, int) = dup<int>(2)
+	print(pair.0, pair.1)
+
+func _ready() -> void:
+	test()

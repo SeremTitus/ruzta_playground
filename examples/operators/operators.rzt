@@ -1,0 +1,22 @@
+# Arithmetic, comparison, logical, modulo and prefix/postfix operators.
+extends Node
+
+var score: int = 100
+var ammo: int = 10
+var combo: int = 1
+var stamina: int = 5
+var exhausted: bool = false
+var lane_a: int = 1
+var lane_b: int = 2
+var turn: int = 5
+
+var can_dash = stamina > 0 and not exhausted
+var same_lane = lane_a == lane_b
+var wrapped = turn % 4
+
+func _ready() -> void:
+	score += 10
+	ammo--
+	combo++
+	print("score:", score, " ammo:", ammo, " combo:", combo)
+	print("can_dash:", can_dash, " same_lane:", same_lane, " wrapped:", wrapped)

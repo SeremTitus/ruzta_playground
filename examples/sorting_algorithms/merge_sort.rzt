@@ -1,0 +1,43 @@
+# Merge sort: split in half, sort each side, then merge the sorted halves.
+
+extends Node
+
+func merge_sort(arr: Array[int], left: int, right: int, temp: Array[int]) -> void:
+	if right - left <= 1:
+		return
+	var mid := (left + right) / 2
+	merge_sort(arr, left, mid, temp)
+	merge_sort(arr, mid, right, temp)
+
+	var i := left
+	var j := mid
+	var k := left
+	# Take the smaller front value while both halves have items.
+	while i < mid and j < right:
+		if arr[i] <= arr[j]:
+			temp[k] = arr[i]
+			i += 1
+		else:
+			temp[k] = arr[j]
+			j += 1
+		k += 1
+	while i < mid:
+		temp[k] = arr[i]
+		i += 1
+		k += 1
+	while j < right:
+		temp[k] = arr[j]
+		j += 1
+		k += 1
+
+	var write := left
+	while write < right:
+		arr[write] = temp[write]
+		write += 1
+
+func _ready() -> void:
+	var values: Array[int] = [38, 27, 43, 3, 9, 82, 10]
+	var scratch: Array[int] = []
+	scratch.resize(values.size())
+	merge_sort(values, 0, values.size(), scratch)
+	print("merge sort:", values)

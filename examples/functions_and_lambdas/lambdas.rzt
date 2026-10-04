@@ -1,0 +1,13 @@
+# Lambdas: anonymous functions stored in variables and called with .call().
+
+extends Node
+
+var announce := func(message: String) -> void:
+	print("announce:", message)
+
+var double := func(value: int) -> int:
+	return value * 2
+
+func _ready() -> void:
+	announce.call("ready")
+	print(double.call(4))

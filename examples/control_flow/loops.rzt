@@ -1,0 +1,15 @@
+# for over ranges and arrays, plus while with a running counter.
+extends Node
+
+var energy: int = 3
+
+func _ready() -> void:
+	for index in 0..=3:
+		print(index)
+
+	for action in ["jump", "dash", "roll"]:
+		print(action)
+
+	while energy > 0:
+		energy -= 1
+	print("energy:", energy)

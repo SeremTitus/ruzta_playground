@@ -1,0 +1,30 @@
+# Singly linked list: each node points to the next; prepend builds the list.
+
+extends Node
+
+class ListNode:
+	var value: int
+	var next: Variant = null
+
+	func _init(p_value: int) -> void:
+		value = p_value
+
+func prepend(head: Variant, value: int) -> Variant:
+	var node := ListNode.new(value)
+	# The new node points at the old head.
+	node.next = head
+	return node
+
+func to_array(head: Variant) -> Array[int]:
+	var result: Array[int] = []
+	var node: Variant = head
+	while node != null:
+		result.append(node.value)
+		node = node.next
+	return result
+
+func _ready() -> void:
+	var head: Variant = null
+	for value in [3, 2, 1]:
+		head = prepend(head, value)
+	print("list:", to_array(head))

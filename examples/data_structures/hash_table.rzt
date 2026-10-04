@@ -1,0 +1,20 @@
+# Hash table with Dictionary: count word frequencies in a text.
+
+extends Node
+
+func count_words(text: String) -> Dictionary:
+	var counts: Dictionary = {}
+	for word in text.split(" "):
+		if word.length() == 0:
+			continue
+		if counts.has(word):
+			counts[word] = counts[word] + 1
+		else:
+			counts[word] = 1
+	return counts
+
+func _ready() -> void:
+	var counts := count_words("the quick brown fox jumps over the lazy dog the")
+	print("unique words:", counts.size())
+	for word: String in counts:
+		print("%s -> %d" % [word, counts[word]])

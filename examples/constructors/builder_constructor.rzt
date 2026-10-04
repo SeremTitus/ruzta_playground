@@ -1,0 +1,36 @@
+# Builder constructor: construct a node and run a setup block with control flow.
+extends Node
+
+func make_pause_menu(show_debug: bool, entries: Array[String]) -> VBoxContainer:
+	return VBoxContainer {
+		name = "PauseMenu"
+		alignment = BoxContainer.ALIGNMENT_CENTER
+
+		if show_debug:
+			name = "PauseMenuDebug"
+		else:
+			name = "PauseMenuRelease"
+
+		# Bare names resolve receiver-first: get_child_count() is the VBox's.
+		while get_child_count() < entries.size():
+			if get_child_count() >= 4:
+				break
+			Button {
+				text = entries[get_child_count()]
+			}
+
+		for label in ["Paused", "", "Resume"]:
+			if label == "":
+				continue
+			Button {
+				text = label
+			}
+	}
+
+func _ready() -> void:
+	var menu := make_pause_menu(true, ["Options"])
+	add_child(menu)
+	var texts: Array[String] = []
+	for button in menu.get_children():
+		texts.append((button as Button).text)
+	print("menu:", menu.name, " buttons:", texts)

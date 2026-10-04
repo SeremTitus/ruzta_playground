@@ -1,0 +1,23 @@
+# Selection sort: repeatedly select the minimum of the unsorted tail and swap it forward.
+
+extends Node
+
+func selection_sort(arr: Array[int]) -> void:
+	var n := arr.size()
+	for i in 0..n:
+		var min_index := i
+		var j := i + 1
+		while j < n:
+			if arr[j] < arr[min_index]:
+				min_index = j
+			j += 1
+		# Swap the smallest tail element into position i.
+		if min_index != i:
+			var tmp := arr[i]
+			arr[i] = arr[min_index]
+			arr[min_index] = tmp
+
+func _ready() -> void:
+	var values: Array[int] = [29, 10, 14, 37, 13]
+	selection_sort(values)
+	print("selection sort:", values)

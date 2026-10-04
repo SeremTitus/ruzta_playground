@@ -1,0 +1,13 @@
+namespace Gameplay.Enemies
+# A namespaced script: namespace plus a class extending an engine type.
+
+# class_name Goblin  # global names are not supported in the playground
+extends CharacterBody2D
+
+const SPEED := 90.0
+
+func patrol() -> void:
+	print("goblin patrol")
+
+func _ready() -> void:
+	patrol()

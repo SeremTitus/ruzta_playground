@@ -1,0 +1,17 @@
+# Functions: default parameter values and a bool return value.
+extends Node
+
+var health: int = 80
+
+func heal(amount: int = 1) -> void:
+	health += amount
+
+func is_alive() -> bool:
+	return health > 0
+
+func _ready() -> void:
+	heal()
+	heal(19)
+	print("health:", health, " alive:", is_alive())
+	health = 0
+	print("after down:", is_alive())

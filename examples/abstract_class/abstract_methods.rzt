@@ -1,0 +1,19 @@
+# Abstract classes can extend abstract classes until a concrete subclass implements them.
+
+extends Node
+
+@abstract class Enemy:
+	@abstract func attack(target: Node) -> void
+
+@abstract class Boss extends Enemy:
+	func taunt() -> void:
+		print("You cannot win.")
+
+class SlimeBoss extends Boss:
+	func attack(target: Node) -> void:
+		print("Slime bash -> ", target.name)
+
+func _ready() -> void:
+	var boss := SlimeBoss.new()
+	boss.taunt()
+	boss.attack(self)

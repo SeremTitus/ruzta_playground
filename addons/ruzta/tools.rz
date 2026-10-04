@@ -39,6 +39,24 @@ func convert_gd_rz(exclude_addons := true):
 	
 	_scan("res://", gd_files, all_files, exclude_addons)
 	
+	# Update references
+	for file in all_files:
+		if file.get_extension() not in ["tscn", "tres", "gd", "cfg", "txt", "json", "godot"]:
+			continue
+		var file_access := FileAccess.open(file, FileAccess.READ)
+		if file_access == null: continue
+		var text := file_access.get_as_text()
+		file_access.close()
+		if text.contains(".gd") or text.contains("GDScript"):
+			var rgx := RegEx.new()
+			rgx.compile(r"\.gd(?![a-zA-Z])")
+			text = rgx.sub(text, ".rz", true)
+			rgx.compile(r"\bGDScript\b")
+			text = rgx.sub(text, "Ruzta", true)
+			file_access = FileAccess.open(file, FileAccess.WRITE)
+			file_access.store_string(text)
+			file_access.close()
+	
 	# Rename scripts first
 	for gd_path in gd_files:
 		var rz_path := gd_path.get_basename() + ".rz"
@@ -48,20 +66,6 @@ func convert_gd_rz(exclude_addons := true):
 			push_error("Failed to rename: %s" % gd_path)
 		else:
 			DirAccess.rename_absolute(gd_path + ".uid", gd_path.get_basename() + ".rz.uid")
-	
-	# Update references
-	for file in all_files:
-		if file.get_extension() not in ["tscn", "tres", "gd", "cfg", "txt", "json", ".godot"]:
-			continue
-		var file_access := FileAccess.open(file, FileAccess.READ)
-		if file_access == null: continue
-		var text := file_access.get_as_text()
-		file_access.close()
-		if text.contains(".gd"):
-			text = text.replace(".gd", ".rz")
-			file_access = FileAccess.open(file, FileAccess.WRITE)
-			file_access.store_string(text)
-			file_access.close()
 	
 	# Refresh editor
 	EditorInterface.get_resource_filesystem().scan()

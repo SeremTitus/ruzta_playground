@@ -1,0 +1,25 @@
+# Payload enums: cases carry data, matched with match and tested with is.
+
+extends Node
+
+enum Message {
+	Quit,
+	Move(x: int, y: int),
+	Write(text: String),
+}
+
+func handle_message(msg: Message) -> void:
+	if msg is Message.Move(x, y):
+		prints("preview move", x, y)
+
+	match msg:
+		Message.Quit:
+			print("quit")
+		Message.Move(x, y):
+			prints("move", x, y)
+		Message.Write(_):
+			print("write")
+
+func _ready() -> void:
+	handle_message(Message.Quit)
+	handle_message(Message.Move(x: 1, y: 2))

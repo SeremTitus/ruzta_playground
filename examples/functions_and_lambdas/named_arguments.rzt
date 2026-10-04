@@ -1,0 +1,10 @@
+# Named arguments let you skip defaults and reorder parameters.
+
+extends Node
+
+func create_user(name: String, age: int, admin: bool = false) -> void:
+	print(name, age, admin)
+
+func _ready() -> void:
+	create_user("Xkai", admin: true, age: 22)
+	create_user(name: "Blue", age: 19)

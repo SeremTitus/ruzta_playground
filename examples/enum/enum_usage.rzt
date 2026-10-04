@@ -1,0 +1,18 @@
+# Enums as typed values inside match.
+
+extends Node
+
+enum State { IDLE, RUN, HIT, DOWN }
+
+func set_state(state: State) -> void:
+	match state:
+		State.IDLE:
+			print("idle")
+		State.RUN:
+			print("run")
+		_:
+			print("other")
+
+func _ready() -> void:
+	set_state(State.IDLE)
+	set_state(State.RUN)

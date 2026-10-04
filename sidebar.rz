@@ -1,15 +1,21 @@
 extends RefCounted
 
 const SIZE_EXPAND_FILL := 3
+const REGISTRY_PATH := "res://examples/registry.rz"
+const POPUP_SIZE := Vector2i(300, 420)
 
 signal file_selected(name: String)
 signal file_renamed(old_name: String, new_name: String)
 signal new_file_requested
 signal delete_file_requested(name: String)
+signal example_requested(name: String, code: String)
 
 var _item_container: VBoxContainer
 var _owner: Node
 var _selected_name: String = ""
+var _examples_button: Button
+var _examples_popup: PopupPanel
+var _examples_list: VBoxContainer
 
 func _init(owner: Node) -> void:
 	_owner = owner
@@ -19,6 +25,37 @@ func build() -> MarginContainer:
 	_item_container.name = "ItemList"
 	_item_container.size_flags_horizontal = SIZE_EXPAND_FILL
 	_item_container.size_flags_vertical = SIZE_EXPAND_FILL
+
+	_examples_list = VBoxContainer.new()
+	_examples_list.name = "ExamplesList"
+	_examples_list.size_flags_horizontal = SIZE_EXPAND_FILL
+	_examples_list.custom_minimum_size = Vector2(280.0, 0.0)
+	_populate_examples(_examples_list)
+
+	var examples_scroll := ScrollContainer {
+		name = "ExamplesScroll"
+		size_flags_horizontal = SIZE_EXPAND_FILL
+		size_flags_vertical = SIZE_EXPAND_FILL
+		custom_minimum_size = Vector2(300.0, 420.0)
+		horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		add_child(_examples_list)
+	}
+
+	_examples_popup = PopupPanel {
+		name = "ExamplesPopup"
+		add_child(examples_scroll)
+	}
+	_owner.add_child(_examples_popup)
+
+	var examples_button := Button {
+		name = "ExamplesButton"
+		text = "+ Add From Examples"
+		size_flags_horizontal = SIZE_EXPAND_FILL
+		custom_minimum_size = Vector2(0.0, 28.0)
+		tooltip_text = "Create a new script from a built-in example"
+		pressed.connect(_on_examples_pressed)
+	}
+	_examples_button = examples_button
 
 	var panel := MarginContainer {
 		name = "SidePanel"
@@ -42,6 +79,8 @@ func build() -> MarginContainer:
 				pressed.connect(_on_new_pressed)
 			}
 
+			add_child(examples_button)
+
 			ScrollContainer {
 				name = "FileScroll"
 				size_flags_horizontal = SIZE_EXPAND_FILL
@@ -51,6 +90,51 @@ func build() -> MarginContainer:
 		}
 	}
 	return panel
+
+func _populate_examples(list: VBoxContainer) -> void:
+	var registry = load(REGISTRY_PATH)
+	var groups: Array = []
+	if registry != null:
+		groups = registry.GROUPS
+	var label_count := 0
+	for group: Dictionary in groups:
+		var examples: Array = group.get("examples", [])
+		if examples.is_empty():
+			continue
+		var header := Label.new()
+		header.text = str(group.get("title", "Examples"))
+		header.tooltip_text = str(examples.size()) + " examples"
+		list.add_child(header)
+		label_count += 1
+		for example: Dictionary in examples:
+			var btn := Button.new()
+			btn.text = str(example.get("label", "example"))
+			btn.size_flags_horizontal = SIZE_EXPAND_FILL
+			btn.clip_text = true
+			btn.tooltip_text = str(example.get("path", ""))
+			btn.pressed.connect(_on_example_button_pressed.bind(
+				str(example.get("path", "")), str(example.get("label", "example"))))
+			list.add_child(btn)
+	if label_count == 0:
+		var none := Label.new()
+		none.text = "No examples found"
+		list.add_child(none)
+
+func _on_examples_pressed() -> void:
+	if _examples_popup == null or _examples_button == null:
+		return
+	var pos := _examples_button.global_position + Vector2(0.0, _examples_button.size.y)
+	_examples_popup.popup(Rect2i(Vector2i(pos), POPUP_SIZE))
+
+func _on_example_button_pressed(path: String, label: String) -> void:
+	var f := FileAccess.open(path, FileAccess.READ)
+	if f == null:
+		return
+	var code: String = f.get_as_text()
+	f.close()
+	if _examples_popup != null:
+		_examples_popup.hide()
+	example_requested.emit(label, code)
 
 func refresh(names: Array, selected: String) -> void:
 	_selected_name = selected

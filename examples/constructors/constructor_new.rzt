@@ -1,0 +1,15 @@
+# .new() constructs inner-class and engine objects; free() releases them.
+
+extends Node
+
+class Projectile:
+	var speed := 300.0
+
+func test() -> void:
+	var projectile := Projectile.new()
+	var marker := Node2D.new()
+	print(projectile.speed)
+	marker.free()
+
+func _ready() -> void:
+	test()

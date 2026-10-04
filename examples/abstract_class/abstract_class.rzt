@@ -1,0 +1,20 @@
+# An @abstract class with an abstract method, implemented by a subclass.
+
+extends Node
+
+@abstract class Ability:
+	@abstract func activate(target: Node) -> void
+
+	func describe() -> String:
+		return "Shared ability contract"
+
+class Fireball extends Ability:
+	func activate(target: Node) -> void:
+		print("Fireball hits ", target.name)
+
+func cast(target: Node) -> void:
+	var spell := Fireball.new()
+	spell.activate(target)
+
+func _ready() -> void:
+	cast(self)

@@ -1,0 +1,11 @@
+# @warning_ignore silences one warning type for the next declaration or block.
+extends Node
+
+@warning_ignore("unused_parameter")
+func _process(_delta: float) -> void:
+	pass
+
+func _ready() -> void:
+	@warning_ignore("unused_variable"):
+		var unused := 0
+	print("unused declarations reported no warnings")

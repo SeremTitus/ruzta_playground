@@ -1,0 +1,19 @@
+# A class using a trait can override the trait's default method.
+
+extends Node
+
+trait Highlightable:
+	func outline_color() -> Color:
+		return Color.YELLOW
+
+class Chest:
+	uses Highlightable
+
+	func outline_color() -> Color:
+		return Color.ORANGE_RED
+
+func debug_color(target: Chest) -> void:
+	print(target.outline_color())
+
+func _ready() -> void:
+	debug_color(Chest.new())

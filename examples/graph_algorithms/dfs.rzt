@@ -1,0 +1,30 @@
+# DFS: go deep first with a stack; marks nodes when popped.
+
+extends Node
+
+func dfs(graph: Dictionary, start: String) -> Array[String]:
+	var visited: Array[String] = []
+	var stack: Array[String] = [start]
+	while not stack.is_empty():
+		# Pop the deepest node added to the stack.
+		var node: String = stack.pop_back()
+		if visited.has(node):
+			continue
+		visited.append(node)
+		var neighbors: Array = graph.get(node, [])
+		var i := neighbors.size() - 1
+		while i >= 0:
+			stack.append(neighbors[i])
+			i -= 1
+	return visited
+
+func _ready() -> void:
+	var graph: Dictionary = {
+		"A": ["B", "C"],
+		"B": ["A", "D", "E"],
+		"C": ["A", "F"],
+		"D": ["B"],
+		"E": ["B", "F"],
+		"F": ["C", "E"],
+	}
+	print("DFS:", dfs(graph, "A"))

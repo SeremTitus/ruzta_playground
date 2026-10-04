@@ -8,5 +8,4 @@ name = "shadow_color"
 type = 3
 default_value = Color(0, 0, 0, 1)
 category = 0
-category_subproperties = PackedStringArray()
 metadata/_custom_type_script = "uid://b7gagsyfvnai7"

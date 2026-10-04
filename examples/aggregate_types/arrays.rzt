@@ -1,0 +1,11 @@
+# Typed arrays (Array[T]) with append and iteration.
+
+extends Node
+
+var checkpoints: Array[Vector2] = [Vector2.ZERO, Vector2(64, 0)]
+
+func _ready() -> void:
+	checkpoints.append(Vector2(128, 0))
+
+	for point in checkpoints:
+		print(point)

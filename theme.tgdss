@@ -7,7 +7,7 @@
 @global var bg: "#180F0D"
 @global var bg_dark: "#0d0807"
 @global var bg_light: "#2a1f1a"
-@global var bg_hover: "#352820"
+@global var bg_hover: "#203530"
 @global var accent: "#fb922b"
 @global var accent_dim: "#c47020"
 @global var accent_light: "#fdba74"
@@ -16,7 +16,7 @@
 @global var text_muted: "#666666"
 @global var error: "#ff6b6b"
 @global var warning: "#fbbf24"
-@global var success: "#4ade80"
+@global var success: "#4ade85"
 @global var border: "#3d2e25"
 @global var border_light: "#4a3830"
 @global var shadow: "#00000080"
@@ -51,6 +51,7 @@ Button {
     :focus {
         border_color: $accent
     }
+	
 }
 
 LinkButton {
@@ -132,6 +133,7 @@ RichTextLabel {
     bg_color: $bg_dark
     border_color: $border
     corner_radius: 6 6 6 6
+    padding: 6 6 6 6
 }
 
 ItemList {
@@ -226,6 +228,17 @@ PopupMenu {
     bg_color: $bg
     border_color: $border_light
     corner_radius: 6 6 6 6
+}
+
+# Dropdown panel behind the sidebar's "+ Add From Examples" list.
+PopupPanel {
+    bg_color: $bg
+    border: 1 1 1 1
+    border_color: $border_light
+    corner_radius: 6 6 6 6
+    padding: 6 6 6 6
+    shadow: 6 6 6 6
+    shadow_color: $shadow
 }
 
 

@@ -1,0 +1,19 @@
+# Lower bound: first index whose value is >= target (binary search variant).
+
+extends Node
+
+func lower_bound(values: Array[int], target: int) -> int:
+	var low := 0
+	var high := values.size()
+	while low < high:
+		var mid := (low + high) / 2
+		if values[mid] < target:
+			low = mid + 1
+		else:
+			high = mid
+	return low
+
+func _ready() -> void:
+	var values: Array[int] = [1, 3, 3, 3, 7, 9]
+	print("first position for 3:", lower_bound(values, 3))
+	print("first position for 5:", lower_bound(values, 5))

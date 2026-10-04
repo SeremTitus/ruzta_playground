@@ -1,0 +1,12 @@
+# Range syntax: exclusive/inclusive ranges, strides, reverse and concatenation.
+
+extends Node
+
+
+func _ready() -> void:
+	print(0..10)
+	print(0..=10)
+	print(0..10:2)
+	print(10..0)
+	print(10..=0)
+	print(0..2 + [3, 4])

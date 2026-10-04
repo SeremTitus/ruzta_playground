@@ -1,0 +1,13 @@
+# Runtime loading: preload/load resources and is_instance_of checks.
+
+extends Node
+
+const HUD_SCENE = preload("res://main.tscn")
+
+func spawn_hud(scene_path: String) -> void:
+	var hud_scene = load(scene_path)
+	print_debug(hud_scene)
+	print(is_instance_of(HUD_SCENE, TYPE_OBJECT))
+
+func _ready() -> void:
+	spawn_hud("res://main.tscn")

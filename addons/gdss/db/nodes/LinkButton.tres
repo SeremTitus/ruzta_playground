@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="GdssNode_Button" format=3 uid="uid://ubsnex8kqdd1"]
 
-[ext_resource type="Script" uid="uid://bysui7kt6peex" path="res://addons/gdss/db/nodes/Button.gd" id="1_t4oma"]
-[ext_resource type="Script" uid="uid://b7gagsyfvnai7" path="res://addons/gdss/db/props/_base.gd" id="2_quslr"]
+[ext_resource type="Script" path="res://addons/gdss/db/nodes/Button.gd" id="1_t4oma"]
+[ext_resource type="Script" path="res://addons/gdss/db/props/_base.gd" id="2_quslr"]
 
 [resource]
 script = ExtResource("1_t4oma")

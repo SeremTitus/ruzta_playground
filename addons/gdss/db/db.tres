@@ -187,4 +187,7 @@ component_list = Dictionary[String, ExtResource("1_miyk3")]({
 boolean_overrides = Dictionary[String, bool]({
 "align_to_largest_stylebox": true
 })
+methods_dir = "res://addons/gdss/db/methods"
+nodes_dir = "res://addons/gdss/db/nodes"
+props_dir = "res://addons/gdss/db/props"
 metadata/_custom_type_script = "uid://bdit0f5lvxmbp"

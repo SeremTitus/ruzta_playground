@@ -1,0 +1,23 @@
+# Binary search: halve the search range on a sorted array each step.
+
+extends Node
+
+func binary_search(values: Array[int], target: int) -> int:
+	var low := 0
+	var high := values.size() - 1
+	while low <= high:
+		# Check the middle of the current range.
+		var mid := (low + high) / 2
+		var value := values[mid]
+		if value == target:
+			return mid
+		elif value < target:
+			low = mid + 1
+		else:
+			high = mid - 1
+	return -1
+
+func _ready() -> void:
+	var values: Array[int] = [2, 5, 8, 12, 16, 23, 38, 45, 67, 91]
+	print("find 23 at index", binary_search(values, 23))
+	print("find 7 at index", binary_search(values, 7))

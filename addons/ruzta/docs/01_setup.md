@@ -48,6 +48,15 @@ func _process(delta: float) -> void:
 - [First script tutorial](https://docs.godotengine.org/en/stable/getting_started/step_by_step/scripting_first_script.html) :: Small end-to-end example in Godot
 - [GDScript basics](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html) :: Core syntax, declarations, statements, and patterns
 
+## Getting Started with Ruzta Tools
+
+Ruzta ships with an editor plugin that provides GDScript-to-Ruzta conversion tools and a built-in MCP server. The MCP server starts on `localhost:7778/mcp` and currently provides a single `validate-ruzta-script` MCP tool. You can extend `RuztaMCPTool` to add more tools.
+
+To enable Ruzta Tools, go to **Project > Project Settings > Plugins**, find **Ruzta Tools**, and check **Enabled**.
+
+You can then find the available tools under the **Project > Tools** menu in the editor.
+
+
 ## Learn more
 
 Ruzta is intentionally close to [GDScript](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html), so the quickest way to learn is to combine this site with the official Godot scripting references and a couple of practice-oriented guides.

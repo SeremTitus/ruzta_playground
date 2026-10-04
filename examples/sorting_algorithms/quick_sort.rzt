@@ -1,0 +1,33 @@
+# Quick sort: partition around a pivot, then recurse on both sides.
+
+extends Node
+
+func quick_sort(arr: Array[int], low: int, high: int) -> void:
+	if low >= high:
+		return
+	# Partition so elements <= pivot end up left of it.
+	var p := partition(arr, low, high)
+	quick_sort(arr, low, p - 1)
+	quick_sort(arr, p + 1, high)
+
+func partition(arr: Array[int], low: int, high: int) -> int:
+	var pivot := arr[high]
+	var i := low - 1
+	var j := low
+	while j < high:
+		if arr[j] <= pivot:
+			i += 1
+			var tmp := arr[i]
+			arr[i] = arr[j]
+			arr[j] = tmp
+		j += 1
+	i += 1
+	var swap_tmp := arr[i]
+	arr[i] = arr[high]
+	arr[high] = swap_tmp
+	return i
+
+func _ready() -> void:
+	var values: Array[int] = [10, 7, 8, 9, 1, 5]
+	quick_sort(values, 0, values.size() - 1)
+	print("quick sort:", values)

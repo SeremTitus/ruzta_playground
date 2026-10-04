@@ -1,0 +1,15 @@
+# Signals: declare, connect, emit and handle.
+
+extends Node
+
+signal collected(item_name, amount)
+
+func _ready() -> void:
+	collected.connect(_on_collected)
+	pickup("coin", 3)
+
+func pickup(name: String, amount: int) -> void:
+	collected.emit(name, amount)
+
+func _on_collected(item_name: String, amount: int) -> void:
+	print(item_name, amount)

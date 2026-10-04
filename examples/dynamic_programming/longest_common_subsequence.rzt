@@ -1,0 +1,36 @@
+# DP table: dp[i][j] = LCS length of the first i / j characters.
+
+extends Node
+
+func longest_common_subsequence(a: String, b: String) -> int:
+	var rows := a.length() + 1
+	var cols := b.length() + 1
+	var dp: Array = []
+	var i := 0
+	while i < rows:
+		var row: Array[int] = []
+		var col := 0
+		while col < cols:
+			row.append(0)
+			col += 1
+		dp.append(row)
+		i += 1
+
+	i = 1
+	while i < rows:
+		var j := 1
+		while j < cols:
+			# Matching characters extend the diagonal.
+			if a[i - 1] == b[j - 1]:
+				dp[i][j] = dp[i - 1][j - 1] + 1
+			elif dp[i - 1][j] >= dp[i][j - 1]:
+				dp[i][j] = dp[i - 1][j]
+			else:
+				dp[i][j] = dp[i][j - 1]
+			j += 1
+		i += 1
+	return dp[rows - 1][cols - 1]
+
+func _ready() -> void:
+	print("LCS(ABCBDAB, BDCABA) =", longest_common_subsequence("ABCBDAB", "BDCABA"))
+	print("LCS(brick, backpack) =", longest_common_subsequence("brick", "backpack"))

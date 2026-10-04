@@ -1,0 +1,13 @@
+# @tool, @export_group, @export and @onready annotations on a node script.
+@tool
+extends Node2D
+
+@export_group("Movement")
+@export var speed := 240.0
+@export var jump_force := 420.0
+
+@onready var sprite: Sprite2D = get_node_or_null("Sprite2D")
+
+func _ready() -> void:
+	print("speed:", speed, " jump_force:", jump_force)
+	print("sprite:", sprite)

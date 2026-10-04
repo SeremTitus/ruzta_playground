@@ -1,0 +1,29 @@
+# BFS: explore level by level with a queue; visits nodes in distance order.
+
+extends Node
+
+func bfs(graph: Dictionary, start: String) -> Array[String]:
+	var visited: Array[String] = [start]
+	var queue: Array[String] = [start]
+	var head := 0
+	# Process the queue front: nodes leave in distance order.
+	while head < queue.size():
+		var node: String = queue[head]
+		head += 1
+		var neighbors: Array = graph.get(node, [])
+		for neighbor in neighbors:
+			if not visited.has(neighbor):
+				visited.append(neighbor)
+				queue.append(neighbor)
+	return visited
+
+func _ready() -> void:
+	var graph: Dictionary = {
+		"A": ["B", "C"],
+		"B": ["A", "D", "E"],
+		"C": ["A", "F"],
+		"D": ["B"],
+		"E": ["B", "F"],
+		"F": ["C", "E"],
+	}
+	print("BFS:", bfs(graph, "A"))

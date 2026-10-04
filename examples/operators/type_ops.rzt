@@ -1,0 +1,15 @@
+# Type checks with is, casts with as and membership tests with in.
+
+extends Node
+
+var target: Variant = self
+var abilities: Array = ["dash", "jump"]
+
+var named_target := target as Node
+
+func _ready() -> void:
+	if target is Node2D:
+		print(target.position)
+
+	if "dash" in abilities:
+		print("dash ready")

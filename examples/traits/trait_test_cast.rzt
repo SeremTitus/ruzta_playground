@@ -1,0 +1,16 @@
+# is and as work with trait types for runtime capability checks.
+
+extends Node
+
+trait Lootable:
+	func collect() -> void
+
+func try_collect(target: Variant) -> void:
+	if target is Lootable:
+		var lootable = target as Lootable
+		lootable.collect()
+	else:
+		print("Nothing to collect")
+
+func _ready() -> void:
+	try_collect(Node.new())

@@ -1,0 +1,17 @@
+# Properties: getter/setter pair where the setter clamps negatives to 0.
+extends Node
+
+var _speed := 200.0
+
+var speed: float:
+	get:
+		return _speed
+	set(value):
+		_speed = maxf(0.0, value)
+
+func _ready() -> void:
+	print("initial:", speed)
+	speed = -50.0
+	print("after -50:", speed)
+	speed = 320.0
+	print("after 320:", speed)

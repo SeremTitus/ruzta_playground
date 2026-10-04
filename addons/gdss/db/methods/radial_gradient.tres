@@ -1,6 +1,6 @@
-[gd_resource type="Resource" script_class="GdssMethod_RadialGradient" format=3 uid="uid://vf4oqwj6flih"]
+[gd_resource type="Resource" script_class="GdssMethod_RadialGradient" format=3]
 
-[ext_resource type="Script" uid="uid://bqknfrs76jb3" path="res://addons/gdss/db/methods/radial_gradient.gd" id="1_rad"]
+[ext_resource type="Script" path="res://addons/gdss/db/methods/radial_gradient.gd" id="1_rad"]
 
 [resource]
 script = ExtResource("1_rad")

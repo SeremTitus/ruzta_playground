@@ -1,0 +1,18 @@
+# Trial division up to the square root of n.
+
+extends Node
+
+func is_prime(n: int) -> bool:
+	if n < 2:
+		return false
+	var divisor := 2
+	# Testing up to sqrt(n) is enough.
+	while divisor * divisor <= n:
+		if n % divisor == 0:
+			return false
+		divisor += 1
+	return true
+
+func _ready() -> void:
+	for value in [2, 17, 20, 97]:
+		print("%d prime? %s" % [value, str(is_prime(value))])

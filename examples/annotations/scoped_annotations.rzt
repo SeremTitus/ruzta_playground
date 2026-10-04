@@ -1,0 +1,15 @@
+# Scoped annotations: @export: applies to a block, @warning_ignore: to a statement.
+
+extends Node
+
+@export:
+	var grouped_a := 1
+	var grouped_b := 2
+
+func test() -> void:
+	@warning_ignore("unused_variable"):
+		var cached = grouped_a
+		print(cached)
+
+func _ready() -> void:
+	test()

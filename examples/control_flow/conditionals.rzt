@@ -1,0 +1,17 @@
+# if / elif / else chains and the ternary `a if cond else b` expression.
+extends Node
+
+var health: int = 50
+var state: String = "idle"
+var sprinting: bool = true
+
+var banner = "danger" if health < 3 else "safe"
+
+func _ready() -> void:
+	if health <= 0:
+		state = "down"
+	elif sprinting:
+		state = "run"
+	else:
+		state = "idle"
+	print("state:", state, " banner:", banner)

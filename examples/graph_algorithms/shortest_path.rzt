@@ -1,0 +1,43 @@
+# BFS shortest path: track predecessors, then rebuild the path to the goal.
+
+extends Node
+
+func shortest_path(graph: Dictionary, start: String, goal: String) -> Array[String]:
+	var previous: Dictionary = {}
+	var visited: Array[String] = [start]
+	var queue: Array[String] = [start]
+	var head := 0
+	while head < queue.size():
+		var node: String = queue[head]
+		head += 1
+		if node == goal:
+			break
+		var neighbors: Array = graph.get(node, [])
+		for neighbor in neighbors:
+			if not visited.has(neighbor):
+				visited.append(neighbor)
+				# Remember which node reached each neighbor.
+				previous[neighbor] = node
+				queue.append(neighbor)
+	var path: Array[String] = []
+	if not visited.has(goal):
+		return path
+	# Walk predecessors back from the goal to the start.
+	var current := goal
+	while current != start:
+		path.push_front(current)
+		current = previous.get(current, start)
+	path.push_front(start)
+	return path
+
+func _ready() -> void:
+	var graph: Dictionary = {
+		"A": ["B", "C"],
+		"B": ["A", "D"],
+		"C": ["A", "E"],
+		"D": ["B", "E"],
+		"E": ["C", "D", "F"],
+		"F": ["E"],
+	}
+	print("A -> F:", shortest_path(graph, "A", "F"))
+	print("F -> B:", shortest_path(graph, "F", "B"))

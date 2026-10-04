@@ -1,0 +1,19 @@
+# Exponentiation by squaring: O(log exponent) multiplications.
+
+extends Node
+
+func power(base: int, exponent: int) -> int:
+	var result := 1
+	var base_value := base
+	var exp := exponent
+	while exp > 0:
+		# Square the base and halve the exponent each step.
+		if exp % 2 == 1:
+			result *= base_value
+		base_value *= base_value
+		exp /= 2
+	return result
+
+func _ready() -> void:
+	print("2^10 =", power(2, 10))
+	print("3^5 =", power(3, 5))

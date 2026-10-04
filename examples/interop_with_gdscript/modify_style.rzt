@@ -1,0 +1,13 @@
+# GDSS interop: call its static API from Ruzta to override a theme property.
+extends Node
+
+var error_toggle_btn: Button = Button.new()
+
+func change_error_btn_color():
+	load("res://addons/gdss/gdss.gd").set_prop_override(error_toggle_btn, "font_color", Color.RED)
+
+func _ready() -> void:
+	add_child(error_toggle_btn)
+	change_error_btn_color()
+	var overrides: Dictionary = load("res://addons/gdss/gdss.gd").get_prop_overrides(error_toggle_btn)
+	print("overrides:", overrides)

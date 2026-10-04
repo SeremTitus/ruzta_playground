@@ -1,0 +1,42 @@
+# Kahn's algorithm: repeatedly take nodes with no incoming edges.
+
+extends Node
+
+func topological_sort(graph: Dictionary) -> Array[String]:
+	var indegree: Dictionary = {}
+	for node: String in graph:
+		if not indegree.has(node):
+			indegree[node] = 0
+		# Count incoming edges for every node.
+		for neighbor in graph[node]:
+			indegree[neighbor] = indegree.get(neighbor, 0) + 1
+
+	var queue: Array[String] = []
+	for node: String in indegree:
+		# Nodes with no incoming edges come first.
+		if indegree[node] == 0:
+			queue.append(node)
+
+	var order: Array[String] = []
+	var head := 0
+	while head < queue.size():
+		var node: String = queue[head]
+		head += 1
+		order.append(node)
+		var neighbors: Array = graph[node]
+		for neighbor in neighbors:
+			indegree[neighbor] = indegree[neighbor] - 1
+			if indegree[neighbor] == 0:
+				queue.append(neighbor)
+	return order
+
+func _ready() -> void:
+	var graph: Dictionary = {
+		"shirt": ["tie", "belt"],
+		"tie": ["jacket"],
+		"belt": ["jacket"],
+		"pants": ["belt", "shoes"],
+		"jacket": [],
+		"shoes": [],
+	}
+	print("order:", topological_sort(graph))

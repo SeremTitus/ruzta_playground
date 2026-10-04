@@ -1,0 +1,9 @@
+# Everyday builtins: assert, len, typeof, char and ord.
+
+extends Node
+
+func _ready() -> void:
+	assert(len("ruzta") == 5)
+	print(typeof(3.5))
+	print(char(65))
+	print(ord("A"))

@@ -1,0 +1,36 @@
+# BST: left < node <= right; in-order traversal returns values sorted.
+
+extends Node
+
+class TreeNode:
+	var value: int
+	var left: Variant = null
+	var right: Variant = null
+
+	func _init(p_value: int) -> void:
+		value = p_value
+
+func insert(root: Variant, value: int) -> Variant:
+	if root == null:
+		return TreeNode.new(value)
+	# Smaller values go left, larger values go right.
+	if value < root.value:
+		root.left = insert(root.left, value)
+	else:
+		root.right = insert(root.right, value)
+	return root
+
+func inorder(node: Variant, out: Array[int]) -> void:
+	if node == null:
+		return
+	inorder(node.left, out)
+	out.append(node.value)
+	inorder(node.right, out)
+
+func _ready() -> void:
+	var root: Variant = null
+	for value in [50, 30, 70, 20, 40, 60, 80]:
+		root = insert(root, value)
+	var sorted: Array[int] = []
+	inorder(root, sorted)
+	print("BST inorder:", sorted)

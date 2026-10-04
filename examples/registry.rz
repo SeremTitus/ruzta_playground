@@ -1,0 +1,213 @@
+extends RefCounted
+
+## Static example registry extracted from addons/ruzta/docs
+const GROUPS: Array = [
+	{
+		"title": "Setup",
+		"examples": [
+			{ "label": "hello_world", "path": "res://examples/setup/hello_world.rzt" },
+			{ "label": "player", "path": "res://examples/setup/player.rzt" },
+		],
+	},
+	{
+		"title": "Ruzta vs GDScript",
+		"examples": [
+			{ "label": "same_as_gdscript", "path": "res://examples/ruzta_vs_gdscript/same_as_gdscript.rzt" },
+			{ "label": "ruzta_features", "path": "res://examples/ruzta_vs_gdscript/ruzta_features.rzt" },
+		],
+	},
+	{
+		"title": "Interop with GDScript",
+		"examples": [
+			{ "label": "modify_style", "path": "res://examples/interop_with_gdscript/modify_style.rzt" },
+		],
+	},
+	{
+		"title": "Variables and Constants",
+		"examples": [
+			{ "label": "static_values", "path": "res://examples/variables_and_constants/static_values.rzt" },
+		],
+	},
+	{
+		"title": "Primitive Types",
+		"examples": [
+			{ "label": "primitive_values", "path": "res://examples/primitive_types/primitive_values.rzt" },
+			{ "label": "casts", "path": "res://examples/primitive_types/casts.rzt" },
+		],
+	},
+	{
+		"title": "Aggregate Types",
+		"examples": [
+			{ "label": "arrays", "path": "res://examples/aggregate_types/arrays.rzt" },
+			{ "label": "dictionary", "path": "res://examples/aggregate_types/dictionary.rzt" },
+			{ "label": "tuples", "path": "res://examples/aggregate_types/tuples.rzt" },
+		],
+	},
+	{
+		"title": "Functions and Lambdas",
+		"examples": [
+			{ "label": "functions", "path": "res://examples/functions_and_lambdas/functions.rzt" },
+			{ "label": "function_overloading", "path": "res://examples/functions_and_lambdas/function_overloading.rzt" },
+			{ "label": "named_arguments", "path": "res://examples/functions_and_lambdas/named_arguments.rzt" },
+			{ "label": "lambdas", "path": "res://examples/functions_and_lambdas/lambdas.rzt" },
+			{ "label": "properties", "path": "res://examples/functions_and_lambdas/properties.rzt" },
+			{ "label": "variadic", "path": "res://examples/functions_and_lambdas/variadic.rzt" },
+		],
+	},
+	{
+		"title": "Enums",
+		"examples": [
+			{ "label": "enums", "path": "res://examples/enum/enums.rzt" },
+			{ "label": "payload_enum", "path": "res://examples/enum/payload_enum.rzt" },
+			{ "label": "enum_usage", "path": "res://examples/enum/enum_usage.rzt" },
+		],
+	},
+	{
+		"title": "Control Flow",
+		"examples": [
+			{ "label": "conditionals", "path": "res://examples/control_flow/conditionals.rzt" },
+			{ "label": "match", "path": "res://examples/control_flow/match.rzt" },
+			{ "label": "loops", "path": "res://examples/control_flow/loops.rzt" },
+		],
+	},
+	{
+		"title": "Operators",
+		"examples": [
+			{ "label": "operators", "path": "res://examples/operators/operators.rzt" },
+			{ "label": "range_syntax", "path": "res://examples/operators/range_syntax.rzt" },
+			{ "label": "type_ops", "path": "res://examples/operators/type_ops.rzt" },
+		],
+	},
+	{
+		"title": "Printing",
+		"examples": [
+			{ "label": "printing", "path": "res://examples/printing/printing.rzt" },
+		],
+	},
+	{
+		"title": "Signals and Await",
+		"examples": [
+			{ "label": "signals", "path": "res://examples/signals_and_await/signals.rzt" },
+			{ "label": "typed_signals", "path": "res://examples/signals_and_await/typed_signals.rzt" },
+			{ "label": "await", "path": "res://examples/signals_and_await/await.rzt" },
+		],
+	},
+	{
+		"title": "Classes and Globals",
+		"examples": [
+			{ "label": "classes", "path": "res://examples/classes_and_globals/classes.rzt" },
+			{ "label": "inner_class", "path": "res://examples/classes_and_globals/inner_class.rzt" },
+		],
+	},
+	{
+		"title": "Traits",
+		"examples": [
+			{ "label": "declaring_traits", "path": "res://examples/traits/declaring_traits.rzt" },
+			{ "label": "using_traits", "path": "res://examples/traits/using_traits.rzt" },
+			{ "label": "trait_overrides", "path": "res://examples/traits/trait_overrides.rzt" },
+			{ "label": "trait_test_cast", "path": "res://examples/traits/trait_test_cast.rzt" },
+			{ "label": "trait_typed_apis", "path": "res://examples/traits/trait_typed_apis.rzt" },
+		],
+	},
+	{
+		"title": "Abstract Class",
+		"examples": [
+			{ "label": "abstract_class", "path": "res://examples/abstract_class/abstract_class.rzt" },
+			{ "label": "abstract_methods", "path": "res://examples/abstract_class/abstract_methods.rzt" },
+		],
+	},
+	{
+		"title": "Constructors",
+		"examples": [
+			{ "label": "constructor_new", "path": "res://examples/constructors/constructor_new.rzt" },
+			{ "label": "builder_constructor", "path": "res://examples/constructors/builder_constructor.rzt" },
+			{ "label": "object_free", "path": "res://examples/constructors/object_free.rzt" },
+		],
+	},
+	{
+		"title": "Generics",
+		"examples": [
+			{ "label": "generics", "path": "res://examples/generics/generics.rzt" },
+		],
+	},
+	{
+		"title": "Annotations",
+		"examples": [
+			{ "label": "annotations", "path": "res://examples/annotations/annotations.rzt" },
+			{ "label": "scoped_annotations", "path": "res://examples/annotations/scoped_annotations.rzt" },
+			{ "label": "feature_annotation", "path": "res://examples/annotations/feature_annotation.rzt" },
+			{ "label": "warning_ignore", "path": "res://examples/annotations/warning_ignore.rzt" },
+		],
+	},
+	{
+		"title": "Namespaces",
+		"examples": [
+			{ "label": "namespace_declaration", "path": "res://examples/namespaces/namespace_declaration.rzt" },
+			{ "label": "namespace_members", "path": "res://examples/namespaces/namespace_members.rzt" },
+		],
+	},
+	{
+		"title": "Builtin Functions",
+		"examples": [
+			{ "label": "builtins_everyday", "path": "res://examples/builtin_functions/builtins_everyday.rzt" },
+			{ "label": "builtins_runtime", "path": "res://examples/builtin_functions/builtins_runtime.rzt" },
+		],
+	},
+	{
+		"title": "Sorting Algorithms",
+		"examples": [
+			{ "label": "bubble_sort", "path": "res://examples/sorting_algorithms/bubble_sort.rzt" },
+			{ "label": "selection_sort", "path": "res://examples/sorting_algorithms/selection_sort.rzt" },
+			{ "label": "insertion_sort", "path": "res://examples/sorting_algorithms/insertion_sort.rzt" },
+			{ "label": "merge_sort", "path": "res://examples/sorting_algorithms/merge_sort.rzt" },
+			{ "label": "quick_sort", "path": "res://examples/sorting_algorithms/quick_sort.rzt" },
+			{ "label": "heap_sort", "path": "res://examples/sorting_algorithms/heap_sort.rzt" },
+		],
+	},
+	{
+		"title": "Searching Algorithms",
+		"examples": [
+			{ "label": "linear_search", "path": "res://examples/searching_algorithms/linear_search.rzt" },
+			{ "label": "binary_search", "path": "res://examples/searching_algorithms/binary_search.rzt" },
+			{ "label": "lower_bound", "path": "res://examples/searching_algorithms/lower_bound.rzt" },
+		],
+	},
+	{
+		"title": "Data Structures",
+		"examples": [
+			{ "label": "stack", "path": "res://examples/data_structures/stack.rzt" },
+			{ "label": "queue", "path": "res://examples/data_structures/queue.rzt" },
+			{ "label": "linked_list", "path": "res://examples/data_structures/linked_list.rzt" },
+			{ "label": "binary_search_tree", "path": "res://examples/data_structures/binary_search_tree.rzt" },
+			{ "label": "hash_table", "path": "res://examples/data_structures/hash_table.rzt" },
+		],
+	},
+	{
+		"title": "Graph Algorithms",
+		"examples": [
+			{ "label": "bfs", "path": "res://examples/graph_algorithms/bfs.rzt" },
+			{ "label": "dfs", "path": "res://examples/graph_algorithms/dfs.rzt" },
+			{ "label": "shortest_path", "path": "res://examples/graph_algorithms/shortest_path.rzt" },
+			{ "label": "topological_sort", "path": "res://examples/graph_algorithms/topological_sort.rzt" },
+		],
+	},
+	{
+		"title": "Dynamic Programming",
+		"examples": [
+			{ "label": "fibonacci_memo", "path": "res://examples/dynamic_programming/fibonacci_memo.rzt" },
+			{ "label": "coin_change", "path": "res://examples/dynamic_programming/coin_change.rzt" },
+			{ "label": "longest_common_subsequence", "path": "res://examples/dynamic_programming/longest_common_subsequence.rzt" },
+			{ "label": "knapsack", "path": "res://examples/dynamic_programming/knapsack.rzt" },
+		],
+	},
+	{
+		"title": "Math and Number Theory",
+		"examples": [
+			{ "label": "gcd_lcm", "path": "res://examples/math_and_number_theory/gcd_lcm.rzt" },
+			{ "label": "sieve_of_eratosthenes", "path": "res://examples/math_and_number_theory/sieve_of_eratosthenes.rzt" },
+			{ "label": "is_prime", "path": "res://examples/math_and_number_theory/is_prime.rzt" },
+			{ "label": "factorial", "path": "res://examples/math_and_number_theory/factorial.rzt" },
+			{ "label": "fast_power", "path": "res://examples/math_and_number_theory/fast_power.rzt" },
+		],
+	},
+]

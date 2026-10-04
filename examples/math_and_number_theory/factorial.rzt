@@ -1,0 +1,16 @@
+# Iterative factorial with a running product.
+
+extends Node
+
+func factorial(n: int) -> int:
+	var result := 1
+	var i := 2
+	while i <= n:
+		result *= i
+		i += 1
+	return result
+
+func _ready() -> void:
+	print("0! =", factorial(0))
+	print("5! =", factorial(5))
+	print("10! =", factorial(10))

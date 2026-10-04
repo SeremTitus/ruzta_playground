@@ -1,0 +1,20 @@
+# print, prints, printerr and % formatting.
+extends Node
+
+var player_name: String = "Ruzta"
+var wave: int = 3
+var position: Variant = Vector2(64, 128)
+var health: int = 87
+var max_health: int = 100
+var elapsed: float = 12.5
+
+var hp_label = "HP %03d / %03d" % [health, max_health]
+var time_label = "Time %.02f" % elapsed
+
+func _ready() -> void:
+	print("ready:", player_name)
+	prints("spawn", wave, position)
+	printerr("error demo: could not load save")
+
+	print(hp_label)
+	print(time_label)

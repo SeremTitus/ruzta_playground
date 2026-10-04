@@ -1,0 +1,22 @@
+# uses pulls a trait into a class; bodyless functions become requirements.
+
+extends Node
+
+trait Interactable:
+	signal interacted(by: Node)
+	func interact(by: Node) -> void
+
+	func announce(by: Node) -> void:
+		interacted.emit(by)
+
+class Door extends Node:
+	uses Interactable
+
+	func interact(by: Node) -> void:
+		announce(by)
+		print("Door opened by ", by.name)
+
+func _ready() -> void:
+	var door := Door.new()
+	add_child(door)
+	door.interact(self)

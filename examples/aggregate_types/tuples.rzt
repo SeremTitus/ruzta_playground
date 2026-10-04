@@ -1,0 +1,39 @@
+# Tuple types: positional and named fields, destructuring and match patterns.
+
+extends Node
+
+tuple Player(
+	name: String,
+	hp: int,
+	alive: bool
+)
+
+tuple Vec2(
+	x: float,
+	y: float
+)
+
+func get_data() -> (String, int):
+	return ("Coins", 50)
+
+func test() -> void:
+	var a := Vec2(10.0, 20.0)
+	var b := Vec2(x: 2.0, y: 3.0)
+	print(a.0, a.1)
+	print(b.x, b.y)
+
+	var pos: (int, int) = (10, 20)
+	var (x, y) = pos
+	print(x, y)
+
+	match pos:
+		(0, var any_y):
+			print("x is zero", any_y)
+		(var any_x, 0):
+			print("y is zero", any_x)
+		(var any_x, var any_y):
+			print(any_x, any_y)
+
+func _ready() -> void:
+	test()
+	print(get_data())

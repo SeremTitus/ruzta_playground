@@ -1,0 +1,16 @@
+# match with literal, guard (when) and wildcard (_) patterns.
+
+extends Node
+
+var state: String = "run"
+
+func _ready() -> void:
+	match state:
+		"idle":
+			print("standing")
+		"run":
+			print("moving")
+		var current when current.begins_with("attack"):
+			print("combat")
+		_:
+			print("unknown")

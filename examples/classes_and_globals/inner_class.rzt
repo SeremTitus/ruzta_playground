@@ -1,0 +1,16 @@
+# Inner classes: declare a class inside a script and build it with .new().
+extends Node
+
+class Entry:
+	var id: String
+	var count: int
+
+func make_entry(id: String, count: int) -> Entry:
+	var entry := Entry.new()
+	entry.id = id
+	entry.count = count
+	return entry
+
+func _ready() -> void:
+	var entry := make_entry("gel", 3)
+	print(entry.id, " count=", entry.count)

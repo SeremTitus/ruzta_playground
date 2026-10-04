@@ -1,0 +1,24 @@
+# Bubble sort: swap adjacent out-of-order pairs; a pass without swaps means sorted.
+
+extends Node
+
+func bubble_sort(arr: Array[int]) -> void:
+	var n := arr.size()
+	for i in 0..n:
+		var swapped := false
+		# The sorted tail grows, so shrink the window each pass.
+		var limit := n - 1 - i
+		for j in 0..limit:
+			if arr[j] > arr[j + 1]:
+				var tmp := arr[j]
+				arr[j] = arr[j + 1]
+				arr[j + 1] = tmp
+				swapped = true
+		# A pass with no swaps means the array is sorted.
+		if not swapped:
+			break
+
+func _ready() -> void:
+	var values: Array[int] = [64, 34, 25, 12, 22, 11, 90]
+	bubble_sort(values)
+	print("bubble sort:", values)

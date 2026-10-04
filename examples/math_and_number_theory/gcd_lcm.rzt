@@ -1,0 +1,24 @@
+# Euclidean algorithm: gcd via remainder loop; lcm = a / gcd * b.
+
+extends Node
+
+func gcd(a: int, b: int) -> int:
+	var x := a
+	var y := b
+	while y != 0:
+		# Replace (x, y) with (y, x % y) until y hits 0.
+		var remainder := x % y
+		x = y
+		y = remainder
+	return x
+
+func lcm(a: int, b: int) -> int:
+	var g := gcd(a, b)
+	if g == 0:
+		return 0
+	return a / g * b
+
+func _ready() -> void:
+	print("gcd(48, 18) =", gcd(48, 18))
+	print("lcm(4, 6) =", lcm(4, 6))
+	print("gcd(17, 5) =", gcd(17, 5))

@@ -1,0 +1,17 @@
+# static vars and funcs are shared by every instance of the script.
+extends Node
+
+static var spawned_count := 0
+
+var nickname := "unit"
+
+func _init() -> void:
+	spawned_count += 1
+
+static func get_spawned_count() -> int:
+	return spawned_count
+
+func _ready() -> void:
+	print("first:", nickname, " count:", get_spawned_count())
+	var second = get_script().new()
+	print("second:", second.nickname, " shared count:", second.get_spawned_count())

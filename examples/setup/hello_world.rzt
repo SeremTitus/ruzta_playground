@@ -1,0 +1,6 @@
+# Entry point of a playground script: _ready runs when the node enters the tree.
+
+extends Node
+
+func _ready() -> void:
+	print("Hello from Ruzta")

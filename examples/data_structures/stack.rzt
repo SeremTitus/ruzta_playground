@@ -1,0 +1,29 @@
+# Stack (LIFO): push appends to the top, pop removes from the top.
+
+extends Node
+
+var stack: Array[String] = []
+
+func push(value: String) -> void:
+	stack.append(value)
+
+func pop() -> String:
+	if stack.is_empty():
+		return ""
+	var value: String = stack[stack.size() - 1]
+	stack.remove_at(stack.size() - 1)
+	return value
+
+func peek() -> String:
+	if stack.is_empty():
+		return ""
+	return stack[stack.size() - 1]
+
+func _ready() -> void:
+	push("first")
+	push("second")
+	push("third")
+	print("stack:", stack)
+	print("peek:", peek())
+	print("pop:", pop())
+	print("stack:", stack)

@@ -1,0 +1,21 @@
+# Insertion sort: grow a sorted prefix by inserting each element into place.
+
+extends Node
+
+func insertion_sort(arr: Array[int]) -> void:
+	var n := arr.size()
+	for i in 1..n:
+		var key := arr[i]
+		var j := i - 1
+		while j >= 0:
+			if arr[j] <= key:
+				break
+			arr[j + 1] = arr[j]
+			j -= 1
+		# Insert the key where the scan stopped.
+		arr[j + 1] = key
+
+func _ready() -> void:
+	var values: Array[int] = [12, 11, 13, 5, 6]
+	insertion_sort(values)
+	print("insertion sort:", values)

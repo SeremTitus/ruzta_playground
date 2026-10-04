@@ -1,0 +1,12 @@
+# Named enums with explicit values plus an anonymous enum constant.
+extends Node
+
+enum Direction { LEFT = -1, RIGHT = 1 }
+enum { STARTING_LIVES = 3 }
+
+var facing: Direction = Direction.RIGHT
+var lives := STARTING_LIVES
+
+func _ready() -> void:
+	print("Direction.RIGHT =", Direction.RIGHT, " LEFT =", Direction.LEFT)
+	print("facing:", "RIGHT" if facing == Direction.RIGHT else "LEFT", " lives:", lives)

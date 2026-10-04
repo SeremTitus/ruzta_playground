@@ -1,0 +1,31 @@
+# Traits as types: variables, arrays, dictionaries, signals, params and returns.
+extends Node
+
+trait Command:
+	func run() -> void
+
+signal queued(command: Command)
+
+var current: Command
+var history: Array[Command] = []
+var named: Dictionary[String, Command] = {}
+
+func submit(command: Command) -> Command:
+	queued.emit(command)
+	history.append(command)
+	named["last"] = command
+	current = command
+	return command
+
+class Ping:
+	uses Command
+
+	func run() -> void:
+		print("pong")
+
+func _ready() -> void:
+	var ping := Ping.new()
+	queued.connect(func(command) -> void: print("queued signal:", command))
+	var done := submit(ping)
+	print("same:", current == done, " history:", history.size(), " named:", named.has("last"))
+	done.run()

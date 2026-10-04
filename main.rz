@@ -20,6 +20,7 @@ func _ready() -> void:
 	_fm.load_from_disk()
 	_sidebar.file_selected.connect(_on_file_selected)
 	_sidebar.new_file_requested.connect(_on_new_file)
+	_sidebar.example_requested.connect(_on_example_requested)
 	_sidebar.delete_file_requested.connect(_on_delete_file)
 	_sidebar.file_renamed.connect(_on_rename_file)
 	_editor.code_changed.connect(_on_code_changed)
@@ -81,6 +82,7 @@ func _refresh_file_list() -> void:
 	_sidebar.refresh(_fm.get_names(), _fm.current_name)
 
 func _load_current_file() -> void:
+	_editor.script_path = _fm.USER_DIR.path_join(_fm.current_name + ".rz")
 	var content: String = _fm.get_content(_fm.current_name)
 	_editor.set_text(content)
 
@@ -90,6 +92,12 @@ func _on_file_selected(p_name: String) -> void:
 
 func _on_new_file() -> void:
 	var unique_name: String = _fm.create_unique("new_script", _fm.DEFAULT_TEMPLATE)
+	_fm.current_name = unique_name
+	_refresh_file_list()
+	_load_current_file()
+
+func _on_example_requested(p_name: String, code: String) -> void:
+	var unique_name: String = _fm.create_unique(p_name, code)
 	_fm.current_name = unique_name
 	_refresh_file_list()
 	_load_current_file()

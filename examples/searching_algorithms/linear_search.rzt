@@ -1,0 +1,16 @@
+# Linear search: scan each element until the target is found.
+
+extends Node
+
+func linear_search(values: Array[int], target: int) -> int:
+	var n := values.size()
+	# Scan every element in order.
+	for i in 0..n:
+		if values[i] == target:
+			return i
+	return -1
+
+func _ready() -> void:
+	var values: Array[int] = [7, 3, 9, 1, 4]
+	print("find 9 at index", linear_search(values, 9))
+	print("find 2 at index", linear_search(values, 2))

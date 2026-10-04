@@ -1,0 +1,22 @@
+namespace Gameplay.Data
+# What a namespace exposes: enums, tuples, classes and traits under one prefix.
+extends Node
+
+enum Element {
+	FIRE,
+	WATER,
+}
+
+tuple Spawn(x: int, y: int)
+
+class Stats:
+	var health := 10
+
+trait Damageable:
+	func apply(amount: int) -> void
+
+func _ready() -> void:
+	var spot := Spawn(4, 7)
+	var stats := Stats.new()
+	print("element:", Element.WATER, " spawn:", spot.x, spot.y)
+	print("health:", stats.health)

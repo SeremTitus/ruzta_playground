@@ -11,6 +11,7 @@ config_version=5
 [application]
 
 config/name="playground"
+config/version="v1.0.0-beta4"
 run/main_scene="uid://bqiugo5gxprhe"
 config/features=PackedStringArray("4.7")
 run/low_processor_mode=true
@@ -33,7 +34,7 @@ enabled=PackedStringArray("res://addons/gdss/plugin.cfg", "res://addons/ruzta/pl
 
 internal/initialized=true
 editor/use_minimap=true
-editor/show_outline=true
+editor/show_outline=false
 binding/root_default=1
 storage/save_uid="uid://cc8larwkvxbft"
 storage/save_paths=PackedStringArray("res://theme.tgdss")
@@ -41,3 +42,4 @@ storage/save_paths=PackedStringArray("res://theme.tgdss")
 [rendering]
 
 textures/vram_compression/import_etc2_astc=true
+config/version="0.1.0-dev"

@@ -1,0 +1,25 @@
+# Queue (FIFO) with a head index: enqueue appends, dequeue reads forward.
+
+extends Node
+
+var queue: Array[String] = []
+var head := 0
+
+func enqueue(value: String) -> void:
+	queue.append(value)
+
+func dequeue() -> String:
+	if head >= queue.size():
+		return ""
+	var value: String = queue[head]
+	head += 1
+	return value
+
+func _ready() -> void:
+	enqueue("job_1")
+	enqueue("job_2")
+	enqueue("job_3")
+	print("queue:", queue)
+	print("dequeue:", dequeue())
+	print("dequeue:", dequeue())
+	print("remaining:", queue.size() - head)

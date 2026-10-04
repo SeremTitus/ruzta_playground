@@ -62,18 +62,12 @@ class Wrapper:
 - [Function overloading](#topic-functions-function-overloading) allows multiple definitions sharing one name when their parameter types differ, resolved by best signature fit.
 - [Payload enums](#topic-enums-payload-enums-tagged-unions) act as tagged unions — each case can carry its own structured data while still being a single enum type.
 - [Builder constructors](#topic-constructors-using-builder-constructor) (`TypeName { ... }`) let you construct and configure a node subtree inline with control flow and automatic `add_child()` calls.
+- [Namespaces](#section-namespace) prefix the global names a file registers, and `using` imports a namespace's entries so call sites stay short.
 - [`@feature` / `@feature_any`](#topic-annotations-feature-and-feature-any-for-gated-declarations-and-blocks) gate declarations and blocks behind platform or editor feature flags, stripped at runtime when inactive.
 - Named argument calls use `fn(param: value)` or `fn(value, param=value)`.
 
 ## Ruzta - GDScript Interoperability
 
-To use GDScript classes in a Ruzta script you will want to use
-`load("<gdscript file path>")` syntax, same applies in GDScript.
-
-
-```modify_style.rz
-
-func change_error_btn_color():
-	load("res://addons/gdss/gdss.gd").set_prop_override(error_toggle_btn, "font_color", Color.RED)
-
-```
+See [Ruzta - GDScript Interoperability](./03_ruzta-gdscript-interop.md) for how to
+use GDScript classes from Ruzta (via `load()`) and how to extend a GDScript base
+with `extends`.

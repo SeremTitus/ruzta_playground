@@ -9,5 +9,4 @@ type = 5
 default_value = Vector4i(0, 0, 0, 0)
 composite_of = PackedStringArray("shadow_left", "shadow_right", "shadow_top", "shadow_bottom")
 category = 0
-category_subproperties = PackedStringArray()
 metadata/_custom_type_script = "uid://b7gagsyfvnai7"

@@ -1,0 +1,15 @@
+# Type checks (is) and casts (as) on Variant values.
+
+extends Node
+
+func describe(value: Variant) -> void:
+	if value is int:
+		print("int:", value)
+	elif value is String:
+		print("string:", value)
+
+	var amount := value as int
+
+func _ready() -> void:
+	describe(42)
+	describe("hi")

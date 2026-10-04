@@ -1,0 +1,26 @@
+# Traits: required methods, default methods, signals and constants in one place.
+extends Node
+
+trait Damageable:
+	signal damaged(amount: int)
+	const HIT_FLASH_TIME := 0.08
+
+	func apply_damage(amount: int) -> void
+
+	func report_damage(amount: int) -> void:
+		damaged.emit(amount)
+
+class Rock:
+	uses Damageable
+
+	var health := 20
+
+	func apply_damage(amount: int) -> void:
+		health -= amount
+
+func _ready() -> void:
+	var rock := Rock.new()
+	rock.damaged.connect(func(amount: int) -> void: print("signal: took ", amount))
+	rock.apply_damage(5)
+	rock.report_damage(5)
+	print("health:", rock.health, " flash:", Rock.HIT_FLASH_TIME)
